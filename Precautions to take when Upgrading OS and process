@@ -1,0 +1,65 @@
+1. Take system image (or) snapshot for future purpose in case of any issue.
+2. List out all the dependencies required for building application and jenkins.
+   - Ex: for latest Jenkins its java17 or java21
+----------------------------------------------
+3. Take Jenkins configuration file backup running.
+
+* In main-Jenkins server:
+
+Step 1: Login to Jenkins server and stop service
+systemctl stop jenkins
+
+Step 2: Create a tar file of the /var/lib/jenkins directory
+tar -zcvf jenkins.restore.tar.gz /var/lib/jenkins/
+
+Step 3: Upload the tar file to S3
+aws s3 cp jenkins.restore.tar.gz s3://jenkins-backup-storage001/jenkins.restore.tar.gz
+
+* In backup-Jenkins server:
+
+Step 1: Login to Jenkins server and stop service
+systemctl stop Jenkins
+
+Step 2: Remove Jenkins home path
+rm -rf /var/lib/Jenkins
+
+Step 3: Download the tar file from S3
+aws s3 cp s3://jenkins-backup-storage001/jenkins.restore.tar.gz jenkins.restore.tar.gz
+
+Step 4: Untar the downloaded file to restore it
+sudo tar -zxvf jenkins.restore.tar.gz -C /
+
+Step 5: Restart Jenins service
+systemctl start jenkins
+
+Note: 
+In backup-Jenkins server you must install Jenkins.
+Update Java:
+Upgrade Jenkins: sudo apt upgrade jenkins
+Verify plugins and configurations: in manage Jenkins tab and also check for any depreciated plugins and find alternative.
+-------------------------------------------
+Q. Does the new OS version support all the dependencies??
+A. Check it by working on it.
+-------------------------------------------
+*** Restrict particular packages when making upgrades ***
+
+1. On Linux (Debian/Ubuntu-based systems):
+
+* Mark a package to be held back (to prevent it from upgrading): sudo apt-mark hold <package_name>
+* Remove the hold status (to allow the package to be upgraded again): sudo apt-mark unhold <package_name>
+* Check held packages: dpkg --get-selections | grep hold
+
+2. On Red Hat/CentOS/Fedora (RPM-based systems):
+* Temporarily exclude packages during an upgrade: sudo dnf upgrade --exclude=<package_name>
+* Permanently exclude packages (by modifying /etc/dnf/dnf.conf): Add the following line to your dnf.conf file: exclude=<package_name>
+
+* For yum (which is still used on older versions of CentOS/RHEL):
+* Temporarily exclude packages during an upgrade: sudo yum update --exclude=<package_name>
+* Permanently exclude packages: Add the exclude line to /etc/yum.conf: exclude=<package_name>
+--------------------------------------------
+https://ubuntu.com/about/release-cycle
+
+Note: Ubuntu LTS releases receive 5 years of standard security maintenance for all packages in the ‘Main’ repository.
+ Jenkins core and some plugins include native code or depend on Linux API and subsystems, which make them dependent on specific Linux versions.
+
+Generally Ubuntu LTE supports for 5 years, but with ubuntu pro we get an additional support of 5 years.
