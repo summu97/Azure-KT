@@ -1,0 +1,12 @@
+1. On Linux (Debian/Ubuntu-based systems):
+* Mark a package to be held back (to prevent it from upgrading): sudo apt-mark hold <package_name>
+* Remove the hold status (to allow the package to be upgraded again): sudo apt-mark unhold <package_name>
+* Check held packages: dpkg --get-selections | grep hold
+
+2. On Red Hat/CentOS/Fedora (RPM-based systems):
+* Temporarily exclude packages during an upgrade: sudo dnf upgrade --exclude=<package_name>
+* Permanently exclude packages (by modifying /etc/dnf/dnf.conf): Add the following line to your dnf.conf file: exclude=<package_name>
+
+* For yum (which is still used on older versions of CentOS/RHEL):
+* Temporarily exclude packages during an upgrade: sudo yum update --exclude=<package_name>
+* Permanently exclude packages: Add the exclude line to /etc/yum.conf: exclude=<package_name>
