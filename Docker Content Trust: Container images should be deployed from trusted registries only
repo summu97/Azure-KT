@@ -1,3 +1,5 @@
+Sign your container images to prove their authenticity, using Docker Content Trust:
+
 # Check for Images
 docker images
 
@@ -37,3 +39,41 @@ CI/CD automation:
 sign the image(Here you need to pass the pass phrase as input)
 push the signed image to ACR
 add this in pipeline script: export DOCKER_CONTENT_TRUST=1
+=================================
+
+Some common Issues might be:
+1. Custom Image Built Locally
+Even if the base image (node:v20.18.0) is official, once you build a custom image locally and push it to ACR, the image is now treated as a custom image. Azure may flag this as not coming from a trusted source (since it was built locally and pushed to ACR), and it might not meet the standards for image verification or signing.
+2. Lack of Image Signing or Scanning
+
+Possible Solutions to Resolve the Issue:
+A. You can sign your container images to prove their authenticity, using Docker Content Trust or Cosign.
+	- Enable Docker Content Trust: export DOCKER_CONTENT_TRUST=1
+	- Build and Push Image:
+		docker build -t youracr.azurecr.io/yourimage:tag .
+		docker push youracr.azurecr.io/yourimage:tag
+   This ensures that the image you push is signed, and Azure will recognize it as trusted when pulling from ACR.
+
+B. Use Only Official Base Images
+C. Run Azure Security Scanning on Your ACR
+You can use Azure’s built-in security tools to scan the image stored in ACR for vulnerabilities and ensure it adheres to security best practices.
+
+Enable Azure Security Center Container Scanning: Ensure that Azure Defender for Container Registries is enabled. This provides vulnerability scanning of your container images within ACR.
+
+In Azure Portal, go to Azure Container Registry.
+Under Security > Vulnerability Scanning, enable scanning for images in ACR.
+Review Image Scanning Results: If vulnerabilities are detected, review the findings and patch the underlying issues in your Dockerfile.
+
+D.Pull the Image from a Verified Source
+If you don't want to sign your custom image and the warning persists, another option is to:
+
+Pull your base image (node:v20.18.0) directly from Docker Hub.
+Push the image to ACR.
+
+# Pull official image directly from Docker Hub
+docker pull node:v20.18.0
+
+# Rebuild and push it to ACR
+docker tag node:v20.18.0 youracr.azurecr.io/yourimage:tag
+docker push youracr.azurecr.io/yourimage:tag
+
