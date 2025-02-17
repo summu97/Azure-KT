@@ -1,0 +1,20 @@
+Link: https://youtu.be/-JeRYERgGPs?si=CGxaPvMpLazFzzHS
+
+In Azure Data Factory:
+
+|__|- Integration runtimes- +New- Azure, Self Hosted- Continue- Azure- Continue- Provide Name- Virtual network configuration(Enable)- Region- Create(wait till it is in running state).
+
+On left bottom:
+
+Managed private endpoints- + New- Select the resource for which you want to crate endpoint(blob storage)- Continue- Name- Subscription- Select Storage account- Create- It will be in processing state.
+NOTE: Private endpoint is about entire storage level.
+
+Now got to blob storage:
+Networking- Private end points(you will see the request created from azure data factory)- Click on it- approve- Now go to azure data factory, it will take some time to provision.
+
+------------------------------
+Creating new pipeline for Copying data securely from azure blob storage to SQl database using private endpoint- Azure data factory.
+In ADF: Factory resources(pen symbol)- + Create new- Activities(Copy data)- Source(+New)- Azure blob storage- continue- Delimited text(CSV)- Continue- Linked service- 
+connect via integration runtime- select what you created earlier(managed virtual network)- Azure subscription- select the storage(you can see the managed private endpoint approved)-
+test conncetion- create(Here you are creating the linked service)- Browse for what you want- select your options-ok.
+Sink(destintion)- new- azure sql- select db- continue- select or create new- same process as above.
