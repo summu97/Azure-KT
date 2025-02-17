@@ -1,0 +1,39 @@
+# Check for Images
+docker images
+
+# Generate key(This will ask for pass phrase)
+docker trust key generate larry
+
+# Adding signer to the repository(This will ask pass phrase)
+docker trust signer add --key /Path/to/larry.pub larry dockerhub_username/repository_name
+
+# Pull the Image
+docker pull kuberiter/demo-content-trust:tomcat-v1
+
+# Tag the Image
+docker image tag <old image name> kuberiter/demo-content-trust:tomcat-v2-signed
+
+# Sign the Image(Here you need to pass the pass phrase as input)
+docker trust sign kuberiter/demo-content-trust:tomcat-v2-signed
+
+# Inspect the Image(This will show if the images is signed or not)
+docker trust inspect --pretty kuberiter/demo-content-trust:tomcat-v2-signed
+
+# Push the signed Image
+docker push kuberiter/demo-content-trust-v2-signed
+
+# Enable Content Trust at Docker host
+export DOCKER_CONTENT_TRUST=1
+
+# Pull signed and unsigned images for demo
+docker pull kuberiter/demo-content-trust-v1(It will fail)
+docker pull kuberiter/demo-content-trust-v1-signed
+-----------------------
+manual work in server:
+Generate key
+add signer to repository
+
+CI/CD automation:
+sign the image(Here you need to pass the pass phrase as input)
+push the signed image to ACR
+add this in pipeline script: export DOCKER_CONTENT_TRUST=1
