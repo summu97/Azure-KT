@@ -1,0 +1,50 @@
+Point-to-Site: https://learn.microsoft.com/en-us/azure/vpn-gateway/
+What protocol does P2S use? : https://learn.microsoft.com/en-us/azure/vpn-gateway/point-to-site-about#authentication
+Gateway SKUs by tunnel, connection, and throughput: https://learn.microsoft.com/en-us/azure/vpn-gateway/about-gateway-skus
+
+* Before Azure accepts a P2S VPN connection, the user has to be authenticated first. There are three authentication types:
+- Certificate
+- Microsoft Entra ID
+- RADIUS and Active Directory Domain Server
+
+Link: https://learn.microsoft.com/en-us/azure/vpn-gateway/point-to-site-about#authentication
+Link: https://learn.microsoft.com/en-us/azure/vpn-gateway/work-remotely-support?source=recommendations
+Certificate authentication:
+- To configure your P2S gateway for certificate authentication, you upload the trusted root certificate public key to the Azure gateway. 
+- You can use a root certificate that was generated using an Enterprise solution, or you can generate a self-signed certificate.
+- To authenticate, each client that connects must have an installed client certificate that's generated from the trusted root certificate.
+- The validation of the client certificate is performed by the VPN gateway and happens during establishment of the P2S VPN connection.
+
+Certificate authentication workflow:
+- Enable Certificate authentication on the P2S gateway, along with the additional required settings (client address pool, etc.), and upload the root CA public key information.
+- Generate and download VPN client profile configuration files (profile configuration package).
+- Install the client certificate on each connecting client computer.
+- Configure the VPN client on the client computer using the settings found in the VPN profile configuration package.
+- Connect.
+
+
+Authentication method	Tunnel type	Client OS	VPN client
+Certificate			
+			IKEv2, SSTP	Windows		Native VPN client
+			IKEv2		macOS		Native VPN client
+			IKEv2		Linux		strongSwan
+			OpenVPN		Windows		Azure VPN client
+							OpenVPN client version 2.x
+							OpenVPN client version 3.x
+			OpenVPN		macOS		OpenVPN client
+			OpenVPN		iOS		OpenVPN client
+			OpenVPN		Linux		Azure VPN Client
+							OpenVPN client
+
+
+Point-to-Site VPN using enterprise certificate: https://youtu.be/xib3eQhYDQs?si=oXq-Om0ynoL-7XdA
+Documentation: 
+Link: https://learn.microsoft.com/en-us/azure/vpn-gateway/point-to-site-certificate-gateway#type
+Link: https://learn.microsoft.com/en-us/azure/vpn-gateway/point-to-site-about#authentication
+Link: https://learn.microsoft.com/en-us/azure/vpn-gateway/work-remotely-support?source=recommendations
+
+About gateway SKUs: https://learn.microsoft.com/en-us/azure/vpn-gateway/about-gateway-skus
+Azure Site-to-Site VPN Setup from On-Premises to Azure: https://youtu.be/cwnxaB4v3J8?si=Dn1ZaIs7jv98jr_h
+GitHub Link: https://github.com/KamalRathnayake/MeetKamalToday./tree/main/39_AzureP2SVPNGW
+
+
