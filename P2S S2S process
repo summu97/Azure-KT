@@ -1,0 +1,26 @@
+Point-to-Site VPN:
+
+Task-1: Create V-Net
+	Virtual network--create--rg--vnet name--region--next--next(IP address)--10.0.0.0/16--Subnets(add--subnet purpose(virtual network gateway)--starting address(10.0.1.0/27)--add subnets for other resources like virtual machines, firewall etc)--review & create.
+Task-2: Creating virtual network gateway
+	Go to virtual network gateway--create--name--rg--gateway type(VPN)--SKU(vpngw1)--virtual network(select)--Public-IP details(create new or select the IP if you have any)--active active mode(disable)--create(It will take some time to create....).
+Task-3: Configuring VPN gateway
+	Go to virtual network gateway--point-to-site--address pool(172.16.0.0/24)--Tunnel type(IKEv2 and SSTP (SSL))--Authentication type(Azure certificate)--In Root certificates--Name(Give any name)--Public certificate data(Paste the cert content from notepad(only the main body not beginning and ending))--Save--Download VPN client. 
+Task-4: Setting VPN client in your machine
+	In your machine you'll get a file downloaded--Go to it--Extract--WindowsAmd64--Vp.....Amd64--more info--Run anyway--yes--Now in search bar--Search for VPN settings--Open--Click on it--Connect--Go through steps in it.
+Step-5: Connecting to VM
+Get private-IP of VM--In your machine--Cmd or git bash terminal--ping <private-IP>--ssh -i /Path/to/.pem username@private-IP.
+
+
+
+Site-to-Site VPN:
+
+Task-1: Create V-Net
+Task-2: Creating virtual network gateway
+Task-3: Create local gateway(represents On-prem gateway details. This will specify Public-IP of On-prem VPN device & the address space of On-prem internal network)
+	(EX: You have public-IP of firewall(ON-prem), You put it in local gateway & also put the internal ip range of On-prem).
+	Local network gateway--create--rg--region--name--endpoint(public ip of On-prem firewall ip)--Address space(Address space of your lan internal IP address EX: 172.16.16.0/24)--review & create
+Task-4: Create Connection(It is the connection between VPN gateway & local network gateway, Ex: IPsec,VNet to VNet, Site to Site, Provide shared keys for authentication)
+	Go to gateway you created--connections--add--rg--connection type(Site-to-Site(IPsec))--name--region--next--virtual network gateway--local network gateway--IKE protocol(IKEV2)--create.
+
+Download Configuration: connections--download configuration.
