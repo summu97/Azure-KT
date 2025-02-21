@@ -1,0 +1,10 @@
+Adding Firewall directly when creating VNet:
+In security--azure firewall(select it)--name--subnet name--tier(standard)--policy(to restrict or allow users)(create new--name--ok)--public-IP(create)--remaining go through steps.
+
+Q. How Firewall works?
+A. If someone access the Firewall_public-IP:port(that you assign in policies) request goes to particular vm_Ip:80
+Ex: User request for firewall-ip:4000 ---------vm-ip:8080
+
+Configuring Firewall:
+firewall--firewall policy--DNAT rules--+Add a rule collection--name--rule collection type(DNAT)--priority(100)--add
++add rule--rule collection group--rule collection--name--source type(who wants to access the application)--source IP address(you can ad subnet range or particular IP)--destination-IP(public-IP of firewall)--protocol(tcp)--Destination port(your choice)--translated type(ip address)--translated address(IP of VM)--translated port(port on which your application is running).
