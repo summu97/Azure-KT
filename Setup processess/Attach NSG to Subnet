@@ -1,0 +1,5 @@
+How to attach NSG to subnet:
+Task-1: Detach VM NSG
+go to VM--networking--network settings--go down & click on network interface it is attached to--NSG--click on drop down--none--save
+Task-2: Attach NSG to subnet
+go to nsg--on left hand side--subnets--+associate--select VNet--subnet---
