@@ -23,4 +23,20 @@ Task-3: Create local gateway(represents On-prem gateway details. This will speci
 Task-4: Create Connection(It is the connection between VPN gateway & local network gateway, Ex: IPsec,VNet to VNet, Site to Site, Provide shared keys for authentication)
 	Go to gateway you created--connections--add--rg--connection type(Site-to-Site(IPsec))--name--region--next--virtual network gateway--local network gateway--IKE protocol(IKEV2)--create.
 
-Download Configuration: connections--download configuration.
+Download Configuration: connections--download configuration--device vendor(select the on-prem WAN/LAN vendor if present or select generic samples--device family(device parameter)--firm version(generic-samples-device-parameter)--download).
+
+Configuration on opposite side(sopos firewall):
+
+open firewall--Search for Site-to-Site in networking(first go through LAN, WAN)
+add--name--connection type(tunnel interface)--gateway type(initiate the connection)--active on save
+encryption--profile(Microsoft azure(IKEV2))--authentication type--pre shared key(for pre-shared key go to azure portal--in connections select your connection--authentication(you can see your pre shared key))--repeat pre shared key
+Gateway settings--remote gateway--gateway address(Public-ip of azure gateway)--remote-id type(ip address)--remote-id(public ip of azure gateway)
+Local gateway settings--local gateway--listening interface(select ip of your LAN/WAN)--local ID type(ip address)--local id(get the ipv4 gateway ip)--go through remaining options and save
+after connection is securely done.
+go to networking(here we need to ceate our tunnel interface)--click on interface that you used earlier & click on it or click on the interface that you created(EX: xfrm1(here you need to provide tunnel interface ip address)
+Q. How to get it?
+A. go to portal--connections--click on connection that you created--download configuration
+open that downloaded file--go down and search for tunnel interface(VTI)--search & look for IP address & its subnet--now go back to On-prem settings--give IP & subnet
+advanced settings---select Override MSS--give port from downloaded tunnel interface(VTI)--save
+Routing--staticroutes--add--destination ip(give ip address space that you put for your VNet)--interface(select the interface that you created earlier)--administrative distance(1)-metrics(1)--save
+create rule& policy---------
