@@ -1,0 +1,19 @@
+Q. What is ASG used for?
+A. Using Application Security Groups (ASGs), you can group multiple VMs, even if they are in different subnets, and apply Network Security Group (NSG) rules to the entire group.
+
+Steps to configure ASG:
+
+Task-1: Create ASG
+asg--create--rg--name--region--create
+
+Task-2: Attach ASG to VM's
+got to vm--networking--NIC--ASG--configure--select ASG--save
+
+NOTE: 
+* you need to attach ASG to all the VM's, i.e adding multiple VM's to ASG.
+* you need to create 2 different ASG in different subnets and attach vm's to ASG. Ex: v1, v2 to ASG1  & vv1, vv2 to ASG2.
+
+Task-3: attach ASG to NSG: 
+Q. which NSG you need to add ASG rule?
+A. If v1, v2(ASG1) in SB1(NSG1) wants to communicate with vv1, vv2(ASG2) in SB2(NSG2) then create NSG rule in NSG2
+Ex: NSG of SB2--inbound rule--add--source(ASG)--source ASG(ASG1)--port--destination(ASG)--destination ASG(ASG2)--priority-----go through other steps.
