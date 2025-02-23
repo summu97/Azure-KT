@@ -1,0 +1,173 @@
+=======================================================================================================
+****SOLUTION-1****: setting admin user in SQL server and adding other users to server using admin user
+=======================================================================================================
+Create an admin user for sql server and set that user as admin for sql server. login to sql server using SSMS and run few quirres to add users.
+Link: https://youtu.be/5pdL9TnAWVg?si=_RZMYfAhFEleyjZ0
+
+PROCESS:
+
+Step-1: Creating users
+Navigate to --Microsoft Entra ID--users--new user--user principal name(dbadmin, user1, user2)--display name(dbadmin, user1, user2)--password(disable auto generate password and set your desired password)--properties(add properties according to users)--assignments--Add role(global administrator, global reader or any other, of your choice(i gave Global Reader for all users))--review and create
+
+Step-2: Create Azure SQL server with only "Use Microsoft Entra-only authentication"
+Navigate to--SQL servers--create--resource group--server name--location--Authentication method(Use Microsoft Entra-only authentication)--Set admin(select the admin user you want to set)--remaining settings leave default or add if any.
+
+Step-3: Create databases(db1, db2)
+Navigate to sql servers--select created server--create database--database name(db1, db2)--go through remaining options and select or changes if any.
+
+Step-4: Adding roles to admin user in sql servre
+navigate to sql servers--access control(IAM)--add--add role assignment--SQL DB Contributor--next--assign access to(users, group------)--select members(select admin user you created)--select--review & create
+
+Step-5: Adding firewall rule in sql server
+Navigate to sql server--security--networking--public access--selected networks(add firewall rule--rule name(any)--start IP(your firewall IP or any start ip range)--end IP(firewall IP or end ip range)--ok)--save
+NOTE: If you're using any LAN/WAN or any network it will have an IP(mostly firewall IP), make sure to configure that in firewall rule of sql.
+
+Step-6: Connect to sql using "Microsoft SQL Server Management Studio" with admin user credentials
+Open SSMS in your PC--Connect--Database Engine--Server name(get it from sql server you created)--Authentication(Microsoft Entra MFA)--Username(use "User principal name" of admin user you created)--connect(you will be taken to azure portal(give username and password))--and follow the steps----------
+
+Step-7: Creating users for database
+
+**WORKFLOW**: After connecting to SQL server with admin credentials, follow these steps
+Q. Consider you have two users(user1, and user2) and want to give user1 access to db1 and deny user2 access to db1 and vice-versa
+
+
+Flow-1: Connect to the database that you want to assign/decline the permissions for users and run following quiery
+
+WAY-1: Connect to db1 to create new db user, create role and assign role to user
+------------------------------
+USE db1;
+CREATE USER [user1@domain.com] FROM EXTERNAL PROVIDER;
+CREATE ROLE [role1];
+GRANT CONTROL ON DATABASE::[your_database_name] TO role1;
+ALTER ROLE [role1] ADD MEMBER [user1@domain.com];
+------------------------------
+NOTE:
+* Here the users you create are at database level and your server dont know if the user is a valid one. So you need to set particular database that you have access to.
+Open SSMS in your PC--Connect--Database Engine--Server name(get it from sql server you created)--Authentication(Microsoft Entra MFA)--Username(use "User principal name" of user you created in the database)--Connection Priorities--Connect to database(enter the database name you have access to)--Connect--It will take you to azure portal where you need to pass your user details and login.
+* If you use this method for microsoft MFA then the user wont get added to other databases(user wont have any access on other databases) and if he tried to enter another database then it will throw an error.
+
+
+----------------------------------------------------------------------------------
+WAY-2: creating two users in same db's, create roles, grant permissions, and assign roles
+* Connect to db1 to create roles, grant permissions, and assign roles
+------------------------------
+USE db1;
+CREATE USER [user1@domain.com] FROM EXTERNAL PROVIDER;
+CREATE USER [user2@domain.com] FROM EXTERNAL PROVIDER;
+CREATE ROLE [role1];
+GRANT CONTROL ON DATABASE::[your_database_name] TO role1;
+ALTER ROLE [role1] ADD MEMBER [user1@domain.com];
+
+DENY CONNECT TO [user2@domain.com];  -- Ensure user2 doesn't have access to db1
+------------------------------
+
+* Now switch to db2 to create roles, grant permissions, and assign roles:
+------------------------------
+USE db2;
+CREATE USER [user1@domain.com] FROM EXTERNAL PROVIDER;
+CREATE USER [user2@domain.com] FROM EXTERNAL PROVIDER;
+CREATE ROLE [role2];
+GRANT CONTROL ON DATABASE::[your_database_name] TO role1;
+ALTER ROLE [role2] ADD MEMBER [user2@domain.com];
+
+DENY CONNECT TO [user1@domain.com];  -- Ensure user1 doesn't have access to db2
+------------------------------
+
+NOTE:
+* Here the users you create are at database level and your server dont know if the user is a valid one. So you need to set particular database that you have access to.
+
+Open SSMS in your PC--Connect--Database Engine--Server name(get it from sql server you created)--Authentication(Microsoft Entra MFA)--Username(use "User principal name" of user you created in the database)--Connection Priorities--Connect to database(enter the database name you have access to)--Connect--It will take you to azure portal where you need to pass your user details and login.
+* As deny restriction is already set for other users, so other users cant make any changes in database.
+
+
+===========================================================================================
+****SOLUTION-2****: Adding users to a group and setting that group as admin for SQL server
+===========================================================================================
+Step-1: Creating users
+Navigate to --Microsoft Entra ID--users--new user--user principal name(dbadmin, user1, user2)--display name(dbadmin, user1, user2)--password(disable auto generate password and set your desired password)--properties(add properties according to users)--assignments--Add role(global administrator, global reader or any other, of your choice(i gave Global Reader for all users))--review and create
+
+Step-2: Create a group
+Navigate to --Microsoft Entra ID--groups--new group--Group type(security)--group name(dbgroup)--group description(your wish)--owners(add sqladmin)--members(add user1, user2)--create
+NOTE:
+* Make sure all the users are included as members in the group including owner.
+
+Step-3: Create Azure SQL server with only "Use Microsoft Entra-only authentication"
+Navigate to--SQL servers--create--resource group--server name--location--Authentication method(Use Microsoft Entra-only authentication)--Set admin(groups--select the group you created earlier)--remaining settings leave default or add if any.
+
+Step-4: Create databases(db1, db2)
+Navigate to sql servers--select created server--create database--database name(db1, db2)--go through remaining options and select or changes if any.
+
+Step-5: Adding roles to user group in sql servre
+navigate to sql servers--access control(IAM)--add--add role assignment--SQL DB Contributor--next--assign access to(users, group------)--select members(select db group you created)--select--review & create
+
+Step-6: Adding firewall rule in sql server
+Navigate to sql server--security--networking--public access--selected networks(add firewall rule--rule name(any)--start IP(your firewall IP or any start ip range)--end IP(firewall IP or end ip range)--ok)--save
+NOTE: If you're using any lan/wan or any network it will have an IP(mostly firewall IP), make sure to configure that in firewall rule of sql.
+
+Step-7: Try to connect to sql using "Microsoft SQL Server Management Studio"
+Open SSMS--Connect--Database Engine--Server name(get it from sql server you created)--Authentication(Microsoft Entra MFA)--Username(use any username that you created and added to group)--connect(you will be taken to azure portal(give username and password))
+
+NOTE: 
+* Make sure that your sql server, databases are online/running.
+------------------------------
+Login to sql server as admin user and set appropriate permissions to user1 and user2.
+Step-1: Setting custom roles for user1 and user2
+
+USE db1;
+CREATE ROLE db_custom_role1;
+
+USE db2;
+CREATE ROLE db_custom_role2;
+------------------------------
+* Create a Custom Role:
+
+USE [YourDatabase];
+CREATE ROLE db_custom_role;
+
+* Grant Permissions to the Custom Role: SELECT, INSERT, UPDATE, DELETE
+
+USE [YourDatabase];
+GRANT SELECT, INSERT, UPDATE, DELETE TO db_custom_role;
+
+EX:
+USE [YourDatabase];
+GRANT SELECT, INSERT, UPDATE, DELETE TO db_custom_role;
+
+* Add Users to the Custom Role:
+
+USE [YourDatabase];
+EXEC sp_addrolemember 'db_custom_role', 'YourUser';
+
+EX:
+USE [YourDatabase];
+EXEC sp_addrolemember 'db_custom_role', 'YourUser';
+
+
+Restrict Users from Accessing Other Databases: 
+NOTE:
+- Azure SQL Database operates with server-level logins and database-level users. While you cannot directly prevent a user from accessing a different database by just creating a custom role in a database, you can manage access by denying users’ access to certain databases at the database level.
+
+* Deny CONNECT Permission to Specific Databases:
+
+USE DatabaseB;
+DENY CONNECT TO [YourUser];
+
+EX:
+USE DatabaseB;
+DENY CONNECT TO [YourUser];
+
+* Grant Access to Other Databases:
+
+USE DatabaseA;
+GRANT CONNECT TO [YourUser];
+
+EX:
+USE DatabaseA;
+GRANT CONNECT TO [YourUser];
+
+* Set Default Database for a User: This ensures that when a user logs in, they automatically connect to the correct database. You can set the default database on the login level.
+
+ALTER LOGIN [YourLogin] WITH DEFAULT_DATABASE = [YourDatabase];
+
+EX:
+ALTER LOGIN [YourLogin] WITH DEFAULT_DATABASE = [YourDatabase];
