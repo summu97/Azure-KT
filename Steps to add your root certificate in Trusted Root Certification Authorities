@@ -1,0 +1,45 @@
+Installing the Root Certificate on a Windows Client
+1. Export the Root Certificate (if not already done):
+Before you can install the root certificate, make sure you've already exported the root certificate (SumanthRootCert) as a .cer file from the machine where it was created.
+
+Open Certificate Manager by typing certmgr.msc in the Run window (Windows + R).
+In Certificate Manager, locate your root certificate under Personal > Certificates.
+Right-click on SumanthRootCert and select All Tasks > Export.
+Select No password when prompted, and choose to export it as a .cer file.
+Now that you have the .cer file, proceed with the installation on the client machine.
+
+2. Open Microsoft Management Console (MMC):
+Press Windows + R to open the Run dialog.
+Type mmc and press Enter. This opens the Microsoft Management Console (MMC).
+
+3. Add the Certificates Snap-in:
+In the MMC, go to File in the top menu and select Add/Remove Snap-in.
+In the Add or Remove Snap-ins window, select Certificates from the list of available snap-ins, and click Add.
+A dialog will appear asking you to select the Certificates snap-in for either My user account or Computer account. Choose Computer account, as you're installing the certificate for the entire machine, not just your user account.
+Click Next, then Finish to close the dialog.
+
+4. Navigate to Trusted Root Certification Authorities:
+In the MMC window, under Certificates (Local Computer), expand the Trusted Root Certification Authorities folder.
+Under Trusted Root Certification Authorities, expand Certificates.
+You should see a list of trusted root certificates here.
+
+5. Import the Root Certificate:
+Right-click on the Certificates folder under Trusted Root Certification Authorities, then select All Tasks > Import.
+The Certificate Import Wizard will open. Click Next.
+Click Browse and locate the .cer file for your root certificate (SumanthRootCert.cer) that you exported earlier. Select it and click Open.
+Click Next.
+In the next screen, select Place all certificates in the following store and ensure the Trusted Root Certification Authorities store is selected (this should be the default selection).
+Click Next and then Finish.
+
+6. Confirm the Installation:
+After clicking Finish, you should see a confirmation message: "The import was successful".
+You can double-check that the certificate has been installed by going back to the Certificates list under Trusted Root Certification Authorities. Your root certificate (SumanthRootCert) should now appear there.
+
+7. Verify the Installation (Optional):
+Open Certificate Manager again (certmgr.msc), expand Trusted Root Certification Authorities > Certificates, and ensure the root certificate you imported (SumanthRootCert) is listed there.
+Now your Windows machine should trust any certificate signed by this root certificate.
+
+8. Configure the Azure VPN Client:
+Now that the root certificate is installed and trusted, you should be able to configure the Azure VPN Client and select the client certificate signed by the root certificate for VPN authentication.
+
+When configuring the VPN connection, ensure that the root certificate is selected as trusted, and that the client certificate (SumanthChildCert) is available for authentication.
