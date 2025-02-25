@@ -1,0 +1,27 @@
+Way-1: Allow Azure Services and Resources to access server
+In SQL server--Networking--Allow Azure Services and Resources to access server(select it)
+Note: This allows all trusted Azure Services to access your SQL server without adding IP address(VNet private endpoint)
+
+Way-2: Service Endpoint
+Task-1: Go to subnet and enable service-endpoint for microsoft sql.
+Task-2: Adding VNet rules in SQL server
+In SQL server--Networking--Public access--Selected networks--Virtual Network--add--go through steps--ok
+(Here we are adding straight line to Subnet inside VNet and SQl server)
+Now try to connect to sql server
+NOTE: Using this all the resources in subnet can access SQL server
+
+Way-3: Private Endpoint
+* It is a network interface that uses Private-ip from your VNet to communicate to SQL server(This network interface connects you privately & securely to a service that is provided by azure private link).
+* By enabling private endpoint you are bringing the service into your VNet.
+* It supports Network policies, NSG's, Routes, ASG's.
+
+Task-1: Enabling Private Endpoint in SQl server
+In SQL server--Networking--Private access--create--basic--resource(target--subresource(select SQl server))--select VNet--subnet(to which you want to add private endpoint)--IP(select dynamic)--DNS(Go through Scenarios below)
+SCENARIOS:
+Scenario-1: Use this method if you have VNet in your hand
+Integrate with private DNS zone(yes)--Subscription--resource group(Here the private DNS zone will be created and A-name record will be created)--review and create
+
+Scenario-2: In your organization you have a separate networking team and they are managing their own DNS zone. In this scenario
+Integrate with private DNSzone(NO)--once it is created you have to add A-name record of SQL server into that centralized DNS zone and once A-name record is created, then anyone from your orgaization are able to connect through centralized hub can resolve SQL server to correct Ip & connect to SQl server.
+
+NOTE: In Private Endpoinnt--DNS configuration you can see FQDN(Fully Qualified Domain Name) 
