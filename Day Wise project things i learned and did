@@ -1,0 +1,67 @@
+Day:1
+Setup VNet(with firewall), P2S, S2S
+
+Day:2
+Installed/Created
+Jenkins vm--D4s_v3, 2.04(install-sonar latest version, Install Node.js v20.18.0 , Ansible 2.9.6, Gradle 8.3, docker, jenkins)
+Configured NSG- For Subnet
+AKS cluster with 3 node pool
+ACR
+Key Vault
+App Registration(acts as mediator---(Jenkins->app reg..->key vault))
+Storage account(Containers, File shares)
+(Succesfully created and implemented jenkins multistage build and build docker image)
+NOTE: as you are integrating Jenkins with Docker you need to give some permissions.
+[
+cmnd: chmod 777 /var/run/docker.sock
+cmnd: systemctl daemon-reload
+cmnd: systemctl restart docker.service
+]
+
+Sonar installation.
+--------
+#! /bin/bash
+#Launch an instance with port:9000 and n2-standard-1 and 20 GB
+ 
+# Update & Install "java11 & unzip" 
+sudo apt update && sudo apt install openjdk-11-jdk unzip -y
+ 
+# Home directory for sonar user
+sudo mkdir -p /home/sonar
+ 
+cd /opt/
+wget https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-10.6.0.92116.zip
+unzip sonarqube-10.6.0.92116.zip
+sudo useradd --shell /bin/bash sonar
+chown sonar:sonar /opt/sonarqube-10.6.0.92116 -R
+chmod 777 /opt/sonarqube-10.6.0.92116 -R
+su - sonar
+ 
+#run this on server manually
+#cd /opt/sonarqube-10.6.0.92116/bin/linux-x86-64/
+#sh sonar.sh start
+#sh sonar.sh status
+ 
+#echo "user=admin & password=admin"
+--------
+Q. What is log analytics?
+
+Day:3
+
+
+
+
+
+
+
+
+
+
+--------------------------------------------------------------------------------------
+IMPORTANT:
+* EFK: Elasticsearch(gets metrics) Fluentbit(runs as daemon on all nodes in cluster, gets node,pod etc metrics and push to elastic search), Kibana(visualizer)
+  (maintain, Ilm policies, Indices(backup to store))
+* Kafka installation & setup(create topic, brokers)- Try to get max info.
+  (Go through Kafka and Zookeeper, Bitbucket concepts.)
+* Bitbucket
+* System Insights
