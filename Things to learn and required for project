@@ -1,49 +1,58 @@
-TASKS:
-* You should access SQL only if you are an authenticated AD user. ---- https://youtu.be/4tOpFnR35P0?si=Jxkdfbxf6VfdC8Ns
-* Site-to-Site.(Reference: https://www.youtube.com/@rijoskill/videos)(https://youtu.be/cwnxaB4v3J8?si=Dn1ZaIs7jv98jr_h)
-* Point-to-Site.(Reference: https://www.youtube.com/@rijoskill/videos)(https://youtu.be/xib3eQhYDQs?si=oXq-Om0ynoL-7XdA)
+PROJECT WORKFLOW:
+Red hat(Kafka) + AKS cluster(File registration pod) + Storage containers
+High-end server- based on vcpu's(Matching Engine)
 
-* Bastion or any alternatives. What is best in terms of cost, flexibility, disaster.
-* Backup & disaster recovery for VM's. How much does it cost if used.
-* Creating VM using particular Snapshot version.
-* Cost factor between backup & Snapshot.
-
-Infra:
+INFRA-REQUIREMENTS:
 ============
-* VPC(2-subnets(private-subnet-/22(1024 IP's), public-subnet), NSG or ASG(which is best), Route tables, Firewall rules and policies).
+* VPC(2-subnets(private-subnet-/22(1024 IP's), public-subnet), NSG or ASG(which is best), Route tables, Firewall rules and policies).----------Done
+* Site-to-Site.(Reference: https://www.youtube.com/@rijoskill/videos)(https://youtu.be/cwnxaB4v3J8?si=Dn1ZaIs7jv98jr_h)--------Done
+* Point-to-Site.(Reference: https://www.youtube.com/@rijoskill/videos)(https://youtu.be/xib3eQhYDQs?si=oXq-Om0ynoL-7XdA)-----------Done
 * Servers required: Jenkins server(with sonar), Matching server(D2sV3- for .NET), Red hat(b4ms- for Kafka)
 
-============
+IN PROGRESS:
+* Creating VM using particular Snapshot version.
 
-* Kafka installation & setup(create topic, brokers)- Try to get max info.
-* Go through Kafka and Zookeeper concepts.
 
-* SQL server- Public access disables, use private access.
-* Login to Azure SQL server using MFA using mssql(SQL server management). https://youtu.be/BTrwHfTC-9A?si=VTho9ggb1xCM7WlV
+NEED TO IMPLEMENT:
+* SQL server- Use private endpoint access(https://youtu.be/bT4aJUYWkTA?si=YknHBRslfE64HoEz).
+* Login to Azure SQL server using MFA using mssql(SQL server management). https://youtu.be/BTrwHfTC-9A?si=VTho9ggb1xCM7WlV-------Done
 
-* Storage account- Container policies(hot, cold, archive- How they can be applied for individual containers).
+
+PENDING:
 * Azure file shares- Identity based access.
 * Shared key access should be disabled.
-* Life cycle management.
-
-* Resource locks for all resources(accidental deletions).
-* accessing all services using private access or private endpoints.
+* accessing all services using private access or private endpoints.~~~~~
 * ACR.
 * AKS cluster- Ingress installed in it as load balancer.
 * Custom policies.
-* Microsoft PIN(Privileged Identity Management)
+* Backup & disaster recovery for VM's. How much does it cost if used.
+* Cost factor between backup & Snapshot.
+* Browse this in youtube: "access storage blobs via private endpoints using datafactory"
+
+
+IMPORTANT:
+* EFK: Elasticsearch(gets metrics) Fluentbit(runs as daemon on all nodes in cluster, gets node,pod etc metrics and push to elastic search), Kibana(visualizer)
+  (maintain, Ilm policies, Indices(backup to store))
+* Kafka installation & setup(create topic, brokers)- Try to get max info.
+  (Go through Kafka and Zookeeper, Bitbucket concepts.)
+* Bitbucket
+* System Insights
+
+ISSUES:
+* Storage accounts should prevent shared key access
+* This recommendation was automatically configured with default parameters. Make sure to review and customize its values via Environment Settings Security Policy tab. See Additional Information section below.
 
 LEAST PREFERENCE:
 * Least preference: Dockerfile with windows for SSIS package build.
 
 
+COMPLETED:
+* Storage account- Container policies(hot, cold, archive- How they can be applied for individual containers).------Done
+* Resource locks for all resources(accidental deletions).----Done
+* Microsoft PIN(Privileged Identity Management)----Done
+* Bastion or any alternatives. What is best in terms of cost, flexibility, disaster.-----------Done
 
-WORK FLOW OF PROJECT:
-Red hat(Kafka) + AKS cluster(File registration pod) + Storage containers
-High-end server- based on vcpu's(Matching Engine)
 
 
-ISSUES:
-* Azure SQL Database should have Azure Active Directory Only Authentication enabled ---- https://youtu.be/4tOpFnR35P0?si=Jxkdfbxf6VfdC8Ns
-* Storage accounts should prevent shared key access
-* This recommendation was automatically configured with default parameters. Make sure to review and customize its values via Environment Settings Security Policy tab. See Additional Information section below.
+
+
