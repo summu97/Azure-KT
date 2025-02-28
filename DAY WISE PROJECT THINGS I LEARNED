@@ -65,3 +65,28 @@ IMPORTANT:
   (Go through Kafka and Zookeeper, Bitbucket concepts.)
 * Bitbucket
 * System Insights
+=================
+25--Tuesday
+Installed/Created
+Jenkins vm--D4s_v3, 2.04(install-sonar latest version, Install Node.js v20.18.0 , Ansible 2.9.6, Gradle 8.3, docker, jenkins)
+Configured NSG- For Subnet
+AKS cluster with 3 node pool
+ACR
+Key Vault
+Documenting Azure SQL  authentication methods using Private Endpoints.
+-----------------------------------------------------
+26--Wednesday
+Setting SQL server MFA
+Deployments in AKS
+Today's task: connect to SQL server using SSMS via Private Endpoint
+Install ingress in AKS
+Get commands from Azure portal for connecting to aks cluster, 
+NOTE: add your VPN IP, Jenkins ip in networking for AKS
+------------------------------------------------------
+27--Thursday
+Created app registration for Jenkins
+* this allows Jenkins to login to azure without interactive terminal 
+* assign Azure Kubernetes service RBAC cluster admin
+* ARC Pull
+* Installed Kubectl in Jenkins server.
+
