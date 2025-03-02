@@ -253,7 +253,7 @@ autoscaling:
   maxReplicas: 3
   targetCPUUtilizationPercentage: 75
   #  targetMemoryUtilizationPercentage: 75
-  ## see https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#autoscaling-on-multiple-metrics-and-custom-metrics
+  ## see https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale-walkthrough/#autoscaling-on-multiple-metrics-and-custom-metrics   
   customRules: []
   #     - type: Pods
   #       pods:
@@ -364,7 +364,7 @@ networkPolicy:
 luaScripts:
   setIndex.lua: |
     function set_index(tag, timestamp, record)
-        index = "abhishek-"
+        index = "EFK-"
         if record["kubernetes"] ~= nil then
             if record["kubernetes"]["namespace_name"] == "logging" then
                 return -1, timestamp, record  -- Skip logs from the logging namespace
