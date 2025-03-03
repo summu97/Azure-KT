@@ -1,270 +1,147 @@
-Step-1: Helm Installation
+AKS with UserNodePool-2
+
+Step-1: HELM INSTALLATION
+=========================
 Install Helm: curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 Verify Installation: helm version
 
-Step-2: Create namespace & Disk:
+Step-2: CREATE NAMESPACE
+========================
 kubectl create ns logging
 
-az disk create --resource-group <aks-resource-group> --name <aks-disk-name> --size-gb 30 --sku Standard_LRS --zone 1
-EX:
-az disk create --resource-group MC_Sumo-Test-RG_Cluster-01_eastus --name aks-disk-1 --size-gb 30 --sku Standard_LRS --zone 1
+USEFUL:
+To determine the number of volumes that can be allocated per node: kubectl get CSINode <nodename> -o yaml
 
 
-Step-3: Create a PV and PVC with Reclaim Policy as Retain:
-pv-pvc.yaml
-
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: azure-disk-pv
-  annotations:
-    pv.kubernetes.io/provisioned-by: disk.csi.azure.com
-spec:
-  capacity:
-    storage: 30Gi
-  accessModes:
-    - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain  # Ensure PV is retained after PVC deletion
-  storageClassName: azure-disk-sc
-  csi:
-    driver: disk.csi.azure.com
-    readOnly: false
-    volumeHandle: "/subscriptions/abc86e61-76b7-4759-bb79-1e3e27e93f0e/resourceGroups/MC_Sumo-Test-RG_Cluster-01_eastus/providers/Microsoft.Compute/disks/aks-disk-1"
-    fsType: ext4
+Step-3: CREATE STORAGCLASS
+==========================
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
+vim sc.yaml
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
 metadata:
-  name: azure-disk-pvc
-  namespace: logging   # ✅ PVC belongs to the `logging` namespace
-spec:
-  accessModes:
-    - ReadWriteOnce
-  storageClassName: azure-disk-sc
+  name: custom-csi
+provisioner: disk.csi.azure.com
+reclaimPolicy: Retain
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+
+kubectl create -f sc.yaml
+
+
+Step-4: LBELLING NODES
+======================
+kubectl label nodes <node name> agentpool=userpool
+
+
+Step-5: DEPLOY ELASTICSEARCH
+============================
+helm repo add elastic https://helm.elastic.co
+helm repo update
+
+---
+vim sc-values.yaml
+---
+replicas: 2  # Increase to match 2 nodes
+
+volumeClaimTemplate:
+  accessModes: ["ReadWriteOnce"]  # Change if your CSI driver supports it
   resources:
     requests:
-      storage: 30Gi
+      storage: 30Gi  # Increase if your index grows
+  storageClassName: "custom-csi"
+
+nodeSelector:
+  agentpool: "usernodepool"
+
+resources:
+  requests:
+    cpu: "1"
+    memory: "4Gi"
+  limits:
+    cpu: "2"
+    memory: "8Gi"
 
 
-Step-4: Install Elasticsearch on K8s
-helm repo add elastic https://helm.elastic.co
-
-Single node setup:
-helm install elasticsearch \
-  --set replicas=1 \
-  --set persistence.existingClaim=azure-disk-pvc \
-  --set persistence.enabled=true \
-  --set resources.requests.cpu="500m" \
-  --set resources.requests.memory="1Gi" \
-  --set resources.limits.cpu="1000m" \
-  --set resources.limits.memory="2Gi" \
-  elastic/elasticsearch -n logging
+helm install elasticsearch elastic/elasticsearch -f sc-values.yaml --namespace logging
 
 
 
-helm install elasticsearch elastic/elasticsearch \
-  --set replicas=1 \
-  --set persistence.existingClaim=azure-disk-pvc \
-  --set persistence.enabled=true \
-  --set resources.requests.cpu="1000m" \
-  --set resources.requests.memory="2Gi" \
-  --set resources.limits.cpu="2000m" \
-  --set resources.limits.memory="4Gi" \
-  --set extraEnvs[0].name=discovery.type \
-  --set extraEnvs[0].value=single-node \
-  --set nodeSelector.kubernetes.io/hostname=aks-mynodepool-65724217-vmss000000 \
-  -n logging
-
-
-Alternative: Multi-Node Setup:
-helm install/upgrade elasticsearch elastic/elasticsearch \
-  --set replicas=3 \
-  --set persistence.existingClaim=azure-disk-pvc \
-  --set persistence.enabled=true \
-  --set resources.requests.cpu="500m" \
-  --set resources.requests.memory="1Gi" \
-  --set resources.limits.cpu="1000m" \
-  --set resources.limits.memory="2Gi" \
-  -n logging
-
-
-Step-5: Retrieve Elasticsearch Username & Password
+Step-6: RETRIEVE ELASTICSEARCH UNAME AND PASSWORD
+=================================================
 # for username
 kubectl get secrets --namespace=logging elasticsearch-master-credentials -ojsonpath='{.data.username}' | base64 -d
 # for password
 kubectl get secrets --namespace=logging elasticsearch-master-credentials -ojsonpath='{.data.password}' | base64 -d
 
 
-Step-6: Install Kibana
+username: elastic
+passwd: m7LV3bu8mXJvcb4j
+
+
+Step-7: DEPLOY KIBANA
+======================
 helm install kibana --set service.type=LoadBalancer elastic/kibana -n logging
 
-Step-7: Accessing kibana UI
+
+Step-8: ACCESS KIBANA
+=====================
 kubectl get  svc -n logging
 (get kibana svc External-IP and access it in browser)
 
 EXPERNAL-IP:5601
 (Login to it using credentials that are generated earlier)
 
-Step-8: Modifying Username and password in fluentbit-values.yaml 
-Get the file from: https://github.com/iam-veeramalla/observability-zero-to-hero/blob/main/day-5/fluentbit-values.yaml
-Change 442, 443, 457, 458
 
-Step-9: Installing fluentbit
+Step-9: MODIFY USERNAME AND PASSWORD IN "fluentbit-values.yaml"
+=============================================================== 
+Get it from: https://github.com/summu97/Azure-KT/blob/main/EFK/fluentbit-values.yaml
+(Copy to your local)
+Change lines 442, 443, 457, 458 with the credentials you got in Step-6
+
+
+Step-10: INSTALL FLUENTBIT
+==========================
 helm repo add fluent https://fluent.github.io/helm-charts
 helm install fluent-bit fluent/fluent-bit -f fluentbit-values.yaml -n logging
 
 Note: As fluentbit runs as Daemonset you'll get each pod for each node
 
-Step-10: Try deploying some thing and check if you can access the logs
-Create namespace: kubectl create ns test-deployment
-Create the NGINX Deployment: kubectl create deployment nginx --image=nginx --port=80 -n test-deployment
-Expose NGINX as a LoadBalancer Service: kubectl expose deployment nginx --type=LoadBalancer --port=80 --target-port=80 -n test-deployment
-Verify the Deployment and Service:
-kubectl get pods -n test-deployment
-kubectl get svc -n test-deployment
-
-----------------
-Expose elasticsearch as loadbalancer:
-kubectl patch svc elasticsearch-master -n logging -p '{"spec": {"type": "LoadBalancer"}}'
-(Get the "elasticsearch-master" loadbalancer Externa-IP)
-
-Create a New Role for Fluent Bit:
-curl -X POST "http://<Elasticsearch-LoadBalancer-IP>:9200/_security/role/fluentbit_writer" -H 'Content-Type: application/json' -u "elastic:kdsC3iyatL2TpRNa" -d'
-{
-  "cluster": ["monitor"],
-  "indices": [
-    {
-      "names": ["fluentbit-*"],
-      "privileges": ["create_index", "write", "create", "view_index_metadata"]
-    }
-  ]
-}'
-
-EX:
-curl -X POST "http://135.237.21.106:9200/_security/role/fluentbit_writer" -H 'Content-Type: application/json' -u "elastic:kdsC3iyatL2TpRNa" -d'
-{
-  "cluster": ["monitor"],
-  "indices": [
-    {
-      "names": ["fluentbit-*"],
-      "privileges": ["create_index", "write", "create", "view_index_metadata"]
-    }
-  ]
-}'
-
-Assign Role to Your User:
-curl -X POST "http://<Elasticsearch-LoadBalancer-IP>:9200/_security/user/<fluentbit-user>/_roles" -H 'Content-Type: application/json' -u "elastic:kdsC3iyatL2TpRNa" -d'
-{
-  "roles": ["fluentbit_writer"]
-}'
-
-EX:
-curl -X POST "http://135.237.21.106:9200/_security/user/<fluentbit-user>/_roles" -H 'Content-Type: application/json' -u "elastic:kdsC3iyatL2TpRNa" -d'
-{
-  "roles": ["fluentbit_writer"]
-}'
 
 
-Command to Create a New User in Elasticsearch:
-curl -X POST "http://<Elasticsearch-LoadBalancer-IP>:9200/_security/user/fluentbit_user" -H "Content-Type: application/json" -u "elastic:kdsC3iyatL2TpRNa" -d '
-{
-  "password": "fluentbit_password",
-  "roles": ["fluentbit_writer"],
-  "full_name": "Fluent Bit User",
-  "email": "fluentbit@example.com"
-}'
+========================
+TO UNINSTALL EVERYTHING:
+========================
+kubectl run -n logging debug --rm -it --image=alpine -- /bin/sh
 
-EX:
-curl -X POST "http://135.237.21.106:9200/_security/user/fluentbit_user" -H "Content-Type: application/json" -u "elastic:kdsC3iyatL2TpRNa" -d '
-{
-  "password": "fluentbit_password",
-  "roles": ["fluentbit_writer"],
-  "full_name": "Fluent Bit User",
-  "email": "fluentbit@example.com"
-}'
-
-Restart Fluent Bit:
-kubectl rollout restart deployment fluentbit -n logging
-
-Verify If Logs Are Indexed:
-curl -X GET "http://<Elasticsearch-LoadBalancer-IP>:9200/_cat/indices?v"
----------------------------------------------------------------
-Solution to expose elasticsearch as loadbalancer:
- Find the Correct IP Address
-Check the internal service IP for Elasticsearch:
-
-sh
-Copy
-Edit
-kubectl get svc -n logging
-Look for the ClusterIP of elasticsearch-master (which in your case is 10.0.106.93).
-
-2️⃣ Port Forward Elasticsearch for External Access (Temporary Fix)
-If you want to access it from outside the cluster, use port forwarding:
-
-sh
-Copy
-Edit
-kubectl port-forward svc/elasticsearch-master 9200:9200 -n logging
-Now, you can run the curl command using localhost:
-
-sh
-Copy
-Edit
-curl -X POST "http://localhost:9200/_security/role/fluentbit_writer" \
-  -H 'Content-Type: application/json' \
-  -u "elastic:kdsC3iyatL2TpRNa" \
-  -d '
-{
-  "cluster": ["monitor"],
-  "indices": [
-    {
-      "names": ["fluentbit-*"],
-      "privileges": ["create_index", "write", "create", "view_index_metadata"]
-    }
-  ]
-}'
-3️⃣ Expose Elasticsearch as a LoadBalancer (Permanent Solution)
-If you need to access Elasticsearch externally, change its service type to LoadBalancer:
-
-sh
-Copy
-Edit
-kubectl patch svc elasticsearch-master -n logging -p '{"spec": {"type": "LoadBalancer"}}'
-Then, check the new External IP:
-
-sh
-Copy
-Edit
-kubectl get svc -n logging
----------------------------------------------------------------
-
-Some reference links for EFK: 
-https://ahmedhosameldein.wordpress.com/2021/03/25/install-elk-stack-on-azure-kubernetes-cluster-aks-using-helm/
-https://learn.microsoft.com/en-us/azure/aks/azure-csi-disk-storage-provision
-IMP: https://github.com/iam-veeramalla/observability-zero-to-hero/blob/main/day-5/readme.md
-https://github.com/schoudhary22/AKS-AzureDisk/blob/main/storageclass.yaml
-
-
-kubectl create ns logging
-
-helm repo add elastic https://helm.elastic.co
-
-helm install elasticsearch elastic/elasticsearch \
-  --set replicas=1 \
-  --set volumeClaimTemplate.storageClassName=managed-csi \
-  --set persistence.enabled=true \
-  --set persistence.labels.enabled=true \
-  --set persistence.annotations."helm\.sh/resource-policy"=keep \
-  --set resources.requests.cpu="500m" \
-  --set resources.requests.memory="1Gi" \
-  --set resources.limits.cpu="1000m" \
-  --set resources.limits.memory="2Gi" \
-  -n logging
-
-
-helm uninstall fluent-bit -n logging
-helm uninstall kibana -n logging
+To Uninstall:
 helm uninstall elasticsearch -n logging
+helm uninstall kibana -n logging
+helm uninstall fluent-bit -n logging
 
-helm upgrade --install fluent-bit fluent/fluent-bit -f fluentbit-values.yaml -n logging
+kubectl delete pvc --all -n logging
+kubectl delete pv <pv-name>
+
+
+kubectl get all -n logging
+kubectl get pvc -n logging
+kubectl get pv
+kubectl get ns
+
+==========
+DEBUGGING:
+==========
+kubectl run --rm -it debug --image=alpine -- sh
+# Inside the Alpine shell:
+apk add curl
+curl -XGET "http://elasticsearch-master.logging.svc.cluster.local:9200"
+
+
+
+
+-------------------------------------------
+What Are Shards in Elasticsearch?
+Shards are subdivisions of an index in Elasticsearch. Each index is split into multiple shards to allow parallel processing, faster searches, and scalability.
+
+
