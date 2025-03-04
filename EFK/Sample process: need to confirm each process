@@ -13,7 +13,7 @@ USEFUL:
 To determine the number of volumes that can be allocated per node: kubectl get CSINode <nodename> -o yaml
 
 
-Step-3: CREATE STORAGCLASS
+Step-3: CREATE STORAGECLASS
 ==========================
 ---
 vim sc.yaml
@@ -30,9 +30,11 @@ allowVolumeExpansion: true
 kubectl create -f sc.yaml
 
 
-Step-4: LBELLING NODES
+Step-4: LABELLING NODES
 ======================
 kubectl label nodes <node name> agentpool=userpool
+
+To check labels: kubectl get nodes -o jsonpath="{range .items[*]}{.metadata.name} -> {.metadata.labels}{'\n'}{end}"
 
 
 Step-5: DEPLOY ELASTICSEARCH
@@ -93,15 +95,26 @@ kubectl get  svc -n logging
 EXPERNAL-IP:5601
 (Login to it using credentials that are generated earlier)
 
+Step-9: CREATE CUSTOM ADMIN USER
+================================
+login to kibana--click on menu tab--management--security
+ROLES: create role--role name--cluster priviledges(all)--run as priviledges(*)--(indices(*)--priviledges(all))--Add index priviledge(to add one more index)--(indices(*)--priviledges(monitor, read, view_index_metadata, read_cross_cluster))--create role
+USERS: Crete user--go through options--roles(select the custom role you created)
 
-Step-9: MODIFY USERNAME AND PASSWORD IN "fluentbit-values.yaml"
-=============================================================== 
-Get it from: https://github.com/summu97/Azure-KT/blob/main/EFK/fluentbit-values.yaml
-(Copy to your local)
-Change lines 442, 443, 457, 458 with the credentials you got in Step-6
 
 
-Step-10: INSTALL FLUENTBIT
+Step-10 : GENERETE SECRETS WITH USERNAME AND PASSWORD OF YOUR CUSTOM ADMIN USER
+==============================================================================
+File link: https://github.com/summu97/Azure-KT/blob/main/EFK/fluentbit-values.yaml
+
+kubectl create secret generic elasticsearch-credentials --from-literal=ELASTICSEARCH_USERNAME='<username>'  --from-literal=ELASTICSEARCH_PASSWORD='<password>' --namespace=logging
+
+Note: You need to reference these secrets in fluentbit-values.yaml file(line- 312, 318) only, if you change the name is secrets(if not changed anything then dont touch it).
+
+To check content of passwords: kubectl get secret elasticsearch-credentials -n logging -o jsonpath='{.data}' | jq -r 'to_entries | .[] | "\(.key): \(.value | @base64d)"'
+
+
+Step-11: INSTALL FLUENTBIT
 ==========================
 helm repo add fluent https://fluent.github.io/helm-charts
 helm install fluent-bit fluent/fluent-bit -f fluentbit-values.yaml -n logging
@@ -109,6 +122,7 @@ helm install fluent-bit fluent/fluent-bit -f fluentbit-values.yaml -n logging
 Note: As fluentbit runs as Daemonset you'll get each pod for each node
 
 
+Useful when any changes are done in fluentbit-values file and want to apply them: helm install fluent-bit fluent/fluent-bit -f fluentbit-values.yaml -n logging
 
 ========================
 TO UNINSTALL EVERYTHING:
