@@ -303,20 +303,31 @@ terminationGracePeriodSeconds:
 
 priorityClassName: ""
 
-env: []
-#  - name: FOO
-#    value: "bar"
+# Environment variables
+env:
+  - name: ELASTICSEARCH_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: elasticsearch-credentials
+        key: ELASTICSEARCH_USERNAME
 
-# The envWithTpl array below has the same usage as "env", but is using the tpl function to support templatable string.
-# This can be useful when you want to pass dynamic values to the Chart using the helm argument "--set <variable>=<value>"
-# https://helm.sh/docs/howto/charts_tips_and_tricks/#using-the-tpl-function
+  - name: ELASTICSEARCH_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: elasticsearch-credentials
+        key: ELASTICSEARCH_PASSWORD
+
+# The envWithTpl array has the same usage as "env" but supports templating.
+# Useful when passing dynamic values via "--set" in Helm.
 envWithTpl: []
 #  - name: FOO_2
 #    value: "{{ .Values.foo2 }}"
 #
 # foo2: bar2
 
+# Reference existing ConfigMaps or Secrets
 envFrom: []
+
 
 # This supports either a structured array or a templatable string
 extraContainers: []
@@ -439,14 +450,15 @@ config:
         Type  _doc
         Host elasticsearch-master
         Port 9200
-        HTTP_User elastic
-        HTTP_Passwd m7LV3bu8mXJvcb4j
+        HTTP_User ${ELASTICSEARCH_USERNAME}
+        HTTP_Passwd ${ELASTICSEARCH_PASSWORD}
         tls On
         tls.verify Off
         Logstash_Format On
-        Logstash_Prefix podlogs
+        Logstash_Prefix podlogic
         Retry_Limit False
         Suppress_Type_Name On
+
 
     [OUTPUT]
         Name es
@@ -454,12 +466,12 @@ config:
         Type  _doc
         Host elasticsearch-master
         Port 9200
-        HTTP_User elastic
-        HTTP_Passwd m7LV3bu8mXJvcb4j
+        HTTP_User ${ELASTICSEARCH_USERNAME}
+        HTTP_Passwd ${ELASTICSEARCH_PASSWORD}
         tls On
         tls.verify Off
         Logstash_Format On
-        Logstash_Prefix nodelgs
+        Logstash_Prefix nodelogic
         Retry_Limit False
         Suppress_Type_Name On
 
