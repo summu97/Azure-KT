@@ -1,0 +1,25 @@
+replicas: 2  # Increase to match 2 nodes
+
+volumeClaimTemplate:
+  accessModes: ["ReadWriteOnce"]  # Change if your CSI driver supports it
+  resources:
+    requests:
+      storage: 128Gi  # Increase if your index grows
+  storageClassName: "custom-csi"
+
+nodeSelector:
+  agentpool: "usernodepool"
+  pool: "logging"
+
+tolerations:
+  - key: "app"
+    value: "logging"
+    effect: "NoSchedule"
+
+resources:
+  requests:
+    cpu: "1"
+    memory: "4Gi"
+  limits:
+    cpu: "2"
+    memory: "8Gi"
