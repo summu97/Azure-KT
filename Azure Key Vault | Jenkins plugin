@@ -1,35 +1,27 @@
-Prerequisites:
-==============================
+PREREQUESITES:
+==============
 Jenkins Installed: Ensure Jenkins is installed and running.
 Azure Key Vault Plugin: Install the Azure Key Vault Plugin in Jenkins.
 Azure Service Principal or Managed Identity: You need a way to authenticate Jenkins with Azure Key Vault.
 
 
 Step 1: Install the Azure Key Vault Plugin
-==============================
-Log in to Jenkins.
-Navigate to Manage Jenkins > Manage Plugins.
-Go to the Available tab.
-Search for Azure Key Vault.
-Select the plugin and click Install without restart.
-Wait for the installation to complete.
+==========================================
+Log in to Jenkins--Manage Jenkins > Manage Plugins--Available plugins--Search for 'Azure Key Vault'--Select the plugin and click Install without restart.--Wait for the installation to complete.
 
-
-Step 2: Configure Azure Key Vault Plugin in Jenkins
-==============================
-Navigate to Manage Jenkins > Configure System.
-Scroll down to the Azure Key Vault Plugin section.
-Fill in the following details:
-Key Vault URL: Enter your Azure Key Vault URL
-(Example: https://myvault.vault.azure.net/)
-Credential ID: Choose or add credentials to authenticate Jenkins with Key Vault.
-
-
-Step 3: Add Credentials for Azure Authentication
+Step 2: Add Credentials for Azure Authentication
 ==============================
 You need to authenticate Jenkins with Azure Key Vault using either Azure Service Principal or Azure Managed Identity.
 
-Option 1: Using Azure Service Principal
+Option 1: Using Azure Managed Identity 
+Note: This method works if Jenkins is running on an Azure Virtual Machine with Managed Identity enabled.
+
+Ensure Managed Identity is enabled on your VM:
+Go to the Azure Portal--Navigate to Virtual Machines--Select your Jenkins VM--Security--Identity--enable System Assigned Managed Identity--Assign 'Key Vault Reader' & 'Key Vault Secrets User' roles.
+Now go to Azure Key Vault in the Azure portal--Navigate to Access Control (IAM)--Check if your managed identity has permissions or Assign Key 'Key Vault Reader' & 'Vault Secrets User' role to the Managed Identity.
+====
+
+Option 2: Using Azure Service Principal
 In Jenkins, go to Manage Jenkins > Manage Credentials.
 Select Global Credentials (or a relevant scope).
 Click Add Credentials.
@@ -42,30 +34,14 @@ Tenant ID: Your Azure Active Directory tenant ID.
 ID: Provide a recognizable name (e.g., azure-keyvault-credentials).
 Click OK to save.
 
-Option 2: Using Azure Managed Identity
-This method works if Jenkins is running on an Azure Virtual Machine with Managed Identity enabled.
+Step 3: Configure Azure Key Vault Plugin in Jenkins
+===================================================
+Navigate to Manage Jenkins--Credentials--Select Jenkins Global Credentials > Add Credentials--Choose kind: 'Azure Managed Identity'--Provide Subscription-ID--Verify Configuration(Check for "Successfully verified the Managed Identity.")--Create.
 
-Ensure Managed Identity is enabled on your VM:
-Go to the Azure Portal--Navigate to Virtual Machines > Select your Jenkins VM--Under Identity, enable System Assigned Managed Identity--Assign 'Key Vault Reader' & 'Key Vault Secrets User' roles:
-Go to Azure Key Vault in the Azure portal.
-Navigate to Access Control (IAM).
-Assign Key Vault Secrets User role to the Managed Identity.
-In Jenkins, go to Manage Credentials.
-Select Global Credentials > Add Credentials.
-Choose Microsoft Azure Managed Identity as the type.
-Provide an ID (e.g., azure-managed-identity).
-Click OK to save.
+Navigate to Manage Jenkins--System--Scroll down to the 'Azure Key Vault Plugin' section--Key Vault URL: Enter your Azure Key Vault URL(Example: https://myvault.vault.azure.net/)--Credential ID: Choose Credentials ID that you added earlier--Test Connection(it will list secrets if any)--Save
 
 
-Step 4: Test the Connection
-==============================
-Go back to Manage Jenkins > Configure System.
-In the Azure Key Vault Plugin section, select the added credential.
-Click Test Connection.
-If successful, you will see a confirmation message.
-
-
-Step 5: Use Azure Key Vault in Jenkins Pipelines
+Step 4: Use Azure Key Vault in Jenkins Pipelines
 ==============================
 You can now use secrets from Azure Key Vault in Jenkins Pipeline scripts.
 
@@ -75,7 +51,7 @@ Example: Retrieve a Secret in a Pipeline
 pipeline {
     agent any
     environment {
-        MY_SECRET = credentials('my-secret-key')  // Use the Key Vault secret ID
+        MY_SECRET = credentials('your secret ID')  // You need to give secret name that you put in your keyvault
     }
     stages {
         stage('Print Secret') {
