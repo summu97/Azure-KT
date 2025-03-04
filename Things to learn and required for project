@@ -35,6 +35,8 @@ IMPORTANT:
   (maintain, Ilm policies, Indices(backup to store))
 * Kafka installation & setup(create topic, brokers)- Try to get max info.
   (Go through Kafka and Zookeeper, Bitbucket concepts.)
+Part 1-Start Apache kafka on Linux- Ubuntu OS, Apache Kafka Configuration, Start Zookeeper & Broker: https://youtu.be/tFlYoEJsT2k?si=8rei9ZIiprGHo0GD
+Part 2- Apache kafka on Linux- Ubuntu OS, Create kafka Topic, Producer & Consumer (Pub-Sub model): https://youtu.be/LjjPjT6R9Bg?si=cEGGEvLG2CqGCaaj
 * Bitbucket
 * System Insights
 
