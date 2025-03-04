@@ -1,0 +1,56 @@
+Step-1:CHECK EXISTING PV AND PVC
+================================= Check Existing PV and PVC
+kubectl get pv
+kubectl get pvc -n logging
+
+Note: The PV and PVC names because you will need them for the new Elasticsearch.
+
+Step-2 PREVENT PVC & PV FROM GETTING DELETED
+============================================
+(If your current Elasticsearch was deployed as a StatefulSet, the default behavior in Kubernetes is to delete the PVCs when the StatefulSet is deleted.
+
+To avoid PVC deletion, set the reclaim policy of the PV to Retain before deleting the old Elasticsearch:
+USE: kubectl patch pv <pv-name> -p '{"spec":{"persistentVolumeReclaimPolicy":"Retain"}}'
+USE: kubectl get pv
+
+Step-3: UNINSTALL OLD ELASTICSEARCH(WITHOUT DELETING PVC)
+=========================================================
+USE: helm uninstall elasticsearch -n logging
+
+Check that the PVC still exists:
+USE: kubectl get pvc -n logging
+
+
+Step-4: DEPLOY NEW ELASTICSEARCH USING HELM WITH SAME PVC
+=========================================================
+USE: helm repo add elastic https://helm.elastic.co
+USE: helm repo update
+
+OPTION-1: USE THE SAME STORAGECLASS
+
+vim sc-values.yaml
+---
+replicas: 2  # Increase to match 2 nodes
+
+volumeClaimTemplate:
+  accessModes: ["ReadWriteOnce"]  # Change if your CSI driver supports it
+  resources:
+    requests:
+      storage: 30Gi  # Change to your pv volume size
+  storageClassName: "custom-csi"  # Ensure this matches the storageclass you used for pv/pvc
+
+nodeSelector:
+  agentpool: "usernodepool"
+
+resources:
+  requests:
+    cpu: "1"
+    memory: "4Gi"
+  limits:
+    cpu: "2"
+    memory: "8Gi"
+
+
+helm install elasticsearch elastic/elasticsearch -f sc-values.yaml -n logging
+
+NOTE: wait till all the pods get are up and running.
