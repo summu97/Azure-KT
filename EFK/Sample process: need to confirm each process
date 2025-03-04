@@ -157,5 +157,26 @@ curl -XGET "http://elasticsearch-master.logging.svc.cluster.local:9200"
 -------------------------------------------
 What Are Shards in Elasticsearch?
 Shards are subdivisions of an index in Elasticsearch. Each index is split into multiple shards to allow parallel processing, faster searches, and scalability.
+=============================================================================
+TO DELETE KIBANA MANUALLY:
+
+helm uninstall kibana -n logging --no-hooks
+kubectl delete configmap kibana-kibana-helm-scripts -n logging
+kubectl delete all -l app=kibana -n logging
+kubectl delete configmap -l app=kibana -n logging
+kubectl delete secret -l app=kibana -n logging
+kubectl delete serviceaccount -l app=kibana -n logging
+kubectl delete clusterrolebinding -l app=kibana
+kubectl delete rolebinding pre-install-kibana-kibana -n logging
+kubectl delete all --selector app=kibana -n logging
+kubectl delete jobs --selector release=kibana -n logging
+kubectl delete pvc --selector app=kibana -n logging
+kubectl delete role pre-install-kibana-kibana -n logging
+kubectl delete serviceaccount pre-install-kibana-kibana -n logging
 
 
+helm list -n logging
+
+
+verify: kubectl get all -n logging | grep kibana
+=============================================================================
