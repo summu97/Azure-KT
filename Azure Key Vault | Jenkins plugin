@@ -46,10 +46,7 @@ Option 2: Using Azure Managed Identity
 This method works if Jenkins is running on an Azure Virtual Machine with Managed Identity enabled.
 
 Ensure Managed Identity is enabled on your VM:
-Go to the Azure Portal.
-Navigate to Virtual Machines > Select your Jenkins VM.
-Under Identity, enable System Assigned Managed Identity.
-Assign Key Vault Reader & Key Vault Secrets User roles:
+Go to the Azure Portal--Navigate to Virtual Machines > Select your Jenkins VM--Under Identity, enable System Assigned Managed Identity--Assign 'Key Vault Reader' & 'Key Vault Secrets User' roles:
 Go to Azure Key Vault in the Azure portal.
 Navigate to Access Control (IAM).
 Assign Key Vault Secrets User role to the Managed Identity.
