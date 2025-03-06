@@ -173,6 +173,7 @@ kubectl delete jobs --selector release=kibana -n logging
 kubectl delete pvc --selector app=kibana -n logging
 kubectl delete role pre-install-kibana-kibana -n logging
 kubectl delete serviceaccount pre-install-kibana-kibana -n logging
+kubectl delete secret kibana-kibana-es-token -n logging
 
 
 helm list -n logging
