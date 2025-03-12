@@ -1,0 +1,132 @@
+#!/bin/bash
+
+# Variables
+ACR_URL="imagepushacr.azurecr.io"
+ACR_USERNAME="imagepushacr"
+ACR_PASSWORD="*********************************"
+ACR_REPO="imagepushrepo"
+BLOB_CONTAINER_NAME="dockerimagestore"
+BLOB_STORAGE_ACCOUNT="imagestorage0097"
+BLOB_FILE_PATH_PREFIX="images/"
+# Azure Storage Authentication (use Storage Account Key for now)
+BLOB_STORAGE_ACCOUNT_KEY="****************************************************"
+
+# Step 1: Docker Login to ACR
+echo "Logging into Azure Container Registry..."
+docker login $ACR_URL -u $ACR_USERNAME -p $ACR_PASSWORD
+if [ $? -ne 0 ]; then
+    echo "Docker login failed!"
+    exit 1
+fi
+echo "Docker login successful."
+
+# Step 2: Get all image tags from ACR
+echo "Fetching image tags from ACR..."
+IMAGE_TAGS=$(az acr repository show-tags --name $ACR_URL --repository $ACR_REPO --output tsv)
+if [ $? -ne 0 ]; then
+    echo "Failed to fetch image tags from ACR!"
+    exit 1
+fi
+echo "Fetched image tags from ACR."
+
+# Step 3: Check for existing blobs in Blob Storage
+echo "Checking existing blobs in Azure Blob Storage..."
+EXISTING_BLOBS=$(az storage blob list --container-name $BLOB_CONTAINER_NAME --account-name $BLOB_STORAGE_ACCOUNT --account-key $BLOB_STORAGE_ACCOUNT_KEY --query "[].name" -o tsv)
+if [ $? -ne 0 ]; then
+    echo "Failed to list blobs in Azure Blob Storage!"
+    exit 1
+fi
+echo "Fetched existing blobs from Blob Storage."
+
+# Step 4: Initialize a flag to check if there are new images to push
+NEW_IMAGES_FOUND=false
+
+# Step 5: Iterate through all image tags and process each one
+for TAG in $IMAGE_TAGS; do
+    # Prepare the full image name
+    IMAGE_NAME="$ACR_URL/$ACR_REPO:$TAG"
+    BLOB_NAME="${BLOB_FILE_PATH_PREFIX}imagepushrepo.${TAG}.tar.gz"
+
+    # Check if the blob for this image tag already exists in Blob Storage
+    if echo "$EXISTING_BLOBS" | grep -q "$BLOB_NAME"; then
+        echo "Blob for image $IMAGE_NAME already exists. Skipping push."
+    else
+        # No blob found for this image, so we need to save and push it
+        echo "Processing new image $IMAGE_NAME..."
+
+        # Step 5.1: Pull the Docker image to ensure it's available locally
+        echo "Pulling image $IMAGE_NAME from ACR..."
+        docker pull $IMAGE_NAME
+        if [ $? -ne 0 ]; then
+            echo "Failed to pull image $IMAGE_NAME!"
+            continue
+        fi
+
+        # Step 5.2: Create temporary tar and gz files
+        TEMP_TAR=$(mktemp --suffix=".tar")
+        TEMP_GZ=$(mktemp --suffix=".tar.gz")
+
+        # Step 5.3: Save the Docker image as a tar file
+        echo "Saving image $IMAGE_NAME as tar..."
+        docker save -o $TEMP_TAR $IMAGE_NAME
+        if [ $? -ne 0 ]; then
+            echo "Failed to save image $IMAGE_NAME!"
+            rm -f $TEMP_TAR
+            continue
+        fi
+
+        # Step 5.4: Compress the tar file
+        echo "Compressing image tar file..."
+        gzip -c $TEMP_TAR > $TEMP_GZ
+        if [ $? -ne 0 ]; then
+            echo "Failed to compress image $IMAGE_NAME!"
+            rm -f $TEMP_TAR
+            continue
+        fi
+
+        # Step 5.5: Push the compressed tar.gz to Blob Storage
+        echo "Pushing image to Blob Storage..."
+        az storage blob upload \
+            --container-name $BLOB_CONTAINER_NAME \
+            --file $TEMP_GZ \
+            --name $BLOB_NAME \
+            --account-name $BLOB_STORAGE_ACCOUNT \
+            --account-key $BLOB_STORAGE_ACCOUNT_KEY
+        if [ $? -ne 0 ]; then
+            echo "Failed to upload image $IMAGE_NAME to Blob Storage!"
+            rm -f $TEMP_TAR $TEMP_GZ
+            continue
+        fi
+        echo "Image $IMAGE_NAME pushed to Blob Storage."
+
+        # Clean up temporary files after upload
+        rm -f $TEMP_TAR $TEMP_GZ
+
+        # Set the flag to indicate that we found new images
+        NEW_IMAGES_FOUND=true
+    fi
+done
+
+# Step 6: Check if there were no new images processed
+if [ "$NEW_IMAGES_FOUND" = false ]; then
+    echo "No new images found."
+fi
+
+# Step 7: Clean up old images in ACR, keeping only the 3 latest images
+echo "Cleaning up old images in ACR, keeping only the 3 latest images..."
+
+# Sort images by tag (numerically) in reverse order to get the most recent first
+# Keep only the 3 most recent tags and delete the rest
+OLD_IMAGES=$(echo "$IMAGE_TAGS" | sort -V | head -n -3)
+
+for OLD_TAG in $OLD_IMAGES; do
+    echo "Deleting old image $ACR_REPO:$OLD_TAG from ACR..."
+    az acr repository delete -n $ACR_URL --image $ACR_REPO:$OLD_TAG --yes
+    if [ $? -ne 0 ]; then
+        echo "Failed to delete image $ACR_REPO:$OLD_TAG!"
+    else
+        echo "Deleted image $ACR_REPO:$OLD_TAG."
+    fi
+done
+
+echo "Script completed successfully!"
