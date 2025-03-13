@@ -130,3 +130,95 @@ for OLD_TAG in $OLD_IMAGES; do
 done
 
 echo "Script completed successfully!"
+====================================================================================
+USEFUL:
+sudo docker login -u imagepushacr imagepushacr.azurecr.io
+
+
+
+
+
+BUILD IMAGE: sudo docker image build -t imagepushacr.azurecr.io/imagepushrepo:v1 .
+PUSH IMAGE: sudo docker image push imagepushacr.azurecr.io/imagepushrepo:v10
+PULL IMAGE: sudo docker image pull imagepushacr.azurecr.io/imagepushrepo:v1
+
+CHECK IMAGE IN ACR: az acr repository show-tags --name $ACR_NAME --repository $IMAGE --output tsv
+CREATE CONTAINER: docker run -d -p 8080:80 imagepushacr.azurecr.io/imagepushrepo:v4
+
+Listing images in Azure Container Registry:
+az acr repository show-tags --name <your-acr-name> --repository <image-name> --output table
+az acr repository show-tags --name imagepushacr --repository imagepushrepo --output table
+
+List images along with their image name:
+az acr repository show-tags --name imagepushacr --repository imagepushrepo --output tsv | \
+xargs -I {} echo "imagepushacr.azurecr.io/imagepushrepo:{}"
+
+Delete particular image version:
+az acr repository delete --name imagepushacr --image imagepushrepo:v4 --yes
+az acr repository delete --name imagepushacr.azurecr.io --repository imagepushacr --tag 39
+
+az acr repository delete -n imagepushacr --image imagepushrepo:v39
+------------------------------------------------------------------
+1. Save Docker Image as a Tarball (.tar): docker save -o <image_name>.tar <image_name>:<tag>
+EX: docker save -o imagepushrepo.v1.tar imagepushacr.azurecr.io/imagepushrepo:v1
+
+2. Compress the Tarball using gzip: gzip <image_name>.tar
+EX: gzip imagepushrepo.v1.tar
+
+4. Load the Compressed Image Tarball (Later Use)
+If you want to load the image back into Docker from the tarball, use the docker load command: docker load -i myapp_v1.tar.gz
+EX: docker load -i imagepushrepo.v1.tar.gz
+
+=================================================================================
+
+make documentation of every module that learned in azure and post in "share point".
+
+repos, pysping, integrate with pubsub, alerting using python.
+
+
+
+I'm planning for certifications in "Microsoft Certified Azure Solutions Architect" and "Certified Kubernetes Administrator(CKA)".
+
+Microsoft Certified Azure Solutions Architect Expert. AZ-303 focuses on the technical setup, while AZ-304 is about designing solutions and planning the architecture.
+AZ-303 = Building and managing Azure resources (like virtual machines, networks, and databases).
+AZ-304 = Designing the architecture (planning the best solutions for security, cost, scalability, and reliability).
+=================================================================================
+az storage blob list --account-name $STORAGE_ACCOUNT_NAME --container-name $CONTAINER_NAME --output tsv --query "[].name" --connection-string $CONNECTION_STRING
+
+az storage blob list \
+  --account-name yourStorageAccountName \
+  --container-name yourContainerName \
+  --output table \
+  --account-key yourStorageAccountKey
+
+
+az storage blob list --account-name imagestorage0097 --container-name dockerimagestore --output table --account-key Nke8/j5NQBqhJgRs3BRsTUcZ6z/g7p8I+3oApZwwbtZJuggwueW1JWnWgkKQ19EfTClCyGF5Jin2+ASti3aeRg==
+
+
+az storage blob upload \
+  --account-name yourStorageAccountName \
+  --container-name yourContainerName \
+  --name yourBlobName \
+  --file /path/to/local/file \
+  --account-key yourStorageAccountKey
+
+az storage blob upload --account-name imagestorage0097 --container-name dockerimagestore --name script --file /path/to/local/file --account-key Nke8/j5NQBqhJgRs3BRsTUcZ6z/g7p8I+3oApZwwbtZJuggwueW1JWnWgkKQ19EfTClCyGF5Jin2+ASti3aeRg==
+
+az storage blob download \
+    --container-name <container-name> \
+    --name <blob-name> \
+    --file <local-file-path> \
+    --account-name <storage-account-name> \
+    --account-key <storage-account-key>
+
+az storage blob download \
+    --container-name dockerimagestore \
+    --name images/imagepushrepo.v4.tar.gz \
+    --file ./imagepushrepo.v4.tar.gz \
+    --account-name imagestorage0097 \
+    --account-key Nke8/j5NQBqhJgRs3BRsTUcZ6z/g7p8I+3oApZwwbtZJuggwueW1JWnWgkKQ19EfTClCyGF5Jin2+ASti3aeRg==
+
+
+4. Load the Compressed Image Tarball (Later Use)
+If you want to load the image back into Docker from the tarball, use the docker load command: docker load -i myapp_v1.tar.gz
+EX: docker load -i imagepushrepo.v1.tar.gz
