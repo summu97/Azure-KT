@@ -39,7 +39,7 @@ To check labels: kubectl get nodes -o jsonpath="{range .items[*]}{.metadata.name
 
 Step-5: DEPLOY ELASTICSEARCH
 ============================
-NOTE: As you are using accessModes: ["ReadWriteOnce"]. Only one pv can be attached to one node.
+NOTE: As you are using accessModes: ["ReadWriteOnce"]. Only one pv can be attached to one node. So make sure you have 2 nodes for n elasticsearch pods.
 helm repo add elastic https://helm.elastic.co
 helm repo update
 
