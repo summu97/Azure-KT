@@ -1,0 +1,3 @@
+Run following command and automatically logs will get created:
+
+kubectl run log-generator --image=busybox --restart=Never -- sh -c "while true; do echo '$(date) - Log message from log-generator'; sleep 2; done"
