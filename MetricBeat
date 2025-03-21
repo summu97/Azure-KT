@@ -1,0 +1,57 @@
+Step-01: ADD HELM REPO
+helm repo add elastic https://helm.elastic.co
+helm repo update
+
+Step-02: INSTALL METRICBEAT
+helm install metricbeat elastic/metricbeat \
+  --namespace <namespace> \
+  --set daemonset.enabled=true \
+  --set elasticsearch.hosts=["http://<elasticsearch-ip or elasticsearch svc name>:9200"]
+
+EX:
+helm install metricbeat elastic/metricbeat \
+  --namespace logging \
+  --set daemonset.enabled=true \
+  --set elasticsearch.hosts=["http://elasticsearch-master:9200"]
+
+For elasticsearch-ip or elasticsearch svc name:
+kubectl get svc -n logging
+# Take ClusterIP of elasticsearch-master and use it.
+
+Step-03: LOGIN TO METRICBEAT PODS INDIVUDIALLY AND RUN BELOW COMMAND
+kubectl exec -it -n logging metricbeat-metricbeat-kjwz6 -- /bin/bash
+
+./metricbeat setup --dashboards -E setup.kibana.host=57.151.66.141:5601
+
+Here above IP is kibana LB IP
+------------------------------------------------------------------
+UNINSTALL METRICBEAT:
+helm uninstall metricbeat --namespace logging
+------------------------------------------------------------------
+
+USEFUL:
+helm list -n logging
+helm status elasticsearch -n logging
+------------------------------------------------------------------
+
+
+----
+NOTE:
+--set daemonset.enabled=true → Collect node-level and pod-level metrics from all namespaces.
+
+# Explanation:
+DaemonSet:
+Runs one pod on every node.
+Used to collect node-level metrics (e.g., CPU, memory, disk, and network usage).
+Best for infrastructure monitoring.
+
+# Pods that will get created after running above command:
+metricbeat-kube-state-metrics-9bf7cb656-sr5f6
+metricbeat-metricbeat-c2vwf
+metricbeat-metricbeat-metrics-557dd4f886-8vvlj
+metricbeat-metricbeat-skgvt 
+
+metricbeat-kube-state-metrics → Collects cluster state metrics.
+metricbeat-metricbeat (DaemonSet) → Collects node and pod metrics.
+metricbeat-metricbeat-metrics → Aggregates and sends metrics to Elasticsearch.
+----
