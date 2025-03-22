@@ -7,9 +7,10 @@ helm repo add elastic https://helm.elastic.co
 helm repo update
 
 Step-02: Installing Metricbeat
-# Values Link: https://github.com/elastic/helm-charts/blob/main/metricbeat/values.yaml
-# Get the content of above link and paste in local in "metricbeat-values.yaml" or you can use values from "https://github.com/summu97/Azure-KT/blob/main/metricbeat-values.yaml"(Recomended)
-helm install metricbeat elastic/metricbeat --namespace logging -f metricbeat-values.yaml
+helm install metricbeat elastic/metricbeat \
+   --namespace logging \
+   --set daemonset.enabled=true \
+   --set elasticsearch.hosts=["http://elasticsearch-master:9200"]
 
 Step-03: LOGIN TO METRICBEAT PODS INDIVUDIALLY AND RUN BELOW COMMAND
 kubectl exec -it -n logging metricbeat-metricbeat-kjwz6 -- /bin/bash
@@ -42,3 +43,7 @@ metricbeat-kube-state-metrics → Collects cluster state metrics.
 metricbeat-metricbeat (DaemonSet) → Collects node and pod metrics.
 metricbeat-metricbeat-metrics → Aggregates and sends metrics to Elasticsearch.
 ----
+Might be useful in future:
+# Values Link: https://github.com/elastic/helm-charts/blob/main/metricbeat/values.yaml
+# Get the content of above link and paste in local in "metricbeat-values.yaml" or you can use values from "https://github.com/summu97/Azure-KT/blob/main/metricbeat-values.yaml"(Recomended)
+helm install metricbeat elastic/metricbeat --namespace logging -f metricbeat-values.yaml
