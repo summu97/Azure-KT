@@ -75,6 +75,12 @@ daemonset:
         username: '${ELASTICSEARCH_USERNAME}'
         password: '${ELASTICSEARCH_PASSWORD}'
         xpack.monitoring.enabled: true
+      setup.ilm.enabled: false
+      monitoring.enabled: true
+      monitoring.elasticsearch:
+        hosts: '["https://${ELASTICSEARCH_HOSTS:elasticsearch-master:9200}"]'
+        username: '${ELASTICSEARCH_USERNAME}'
+        password: '${ELASTICSEARCH_PASSWORD}'
   nodeSelector: {}
   secretMounts:
     - name: elasticsearch-master-certs
