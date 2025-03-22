@@ -34,6 +34,8 @@ daemonset:
           - pod
           - system
           - volume
+          - state_persistentvolume
+          - state_persistentvolumeclaim
         period: 10s
         host: "${NODE_NAME}"
         hosts: ["https://${NODE_NAME}:10250"]
