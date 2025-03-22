@@ -10,3 +10,5 @@ Metricbeat with Elasticsearch 8.x - Part 1: Install and Secure: https://youtu.be
 Kube-State-Metrics: https://github.com/helm/charts/blob/master/stable/kube-state-metrics/values.yaml
 
 Metricbeat: https://github.com/elastic/helm-charts/blob/main/metricbeat/values.yaml
+
+Metricbeat installation in vm Documentation: https://www.elastic.co/guide/en/beats/metricbeat/current/setup-repositories.html
