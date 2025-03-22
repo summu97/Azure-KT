@@ -60,11 +60,65 @@ nodeSelector:
 
 resources:
   requests:
-    cpu: "1"
-    memory: "4Gi"
+    cpu: "100m"
+    memory: "1Gi"
   limits:
-    cpu: "2"
-    memory: "8Gi"
+    cpu: "500m"
+    memory: "2Gi"
+
+# Enable Monitoring and Security
+extraEnvs:
+  - name: "xpack.monitoring.collection.enabled"
+    value: "true"
+  - name: "xpack.security.enabled"
+    value: "true"
+
+# Fix potential conflicts with proper env settings
+  - name: "XPACK_MONITORING_ENABLED"
+    value: "true"
+  - name: "XPACK_SECURITY_ENABLED"
+    value: "true"
+
+# Optional: Enable TLS if necessary
+# Ensure certificates are correctly configured if enabling TLS
+# extraEnvs:
+#   - name: "xpack.security.transport.ssl.enabled"
+#     value: "true"
+#   - name: "xpack.security.http.ssl.enabled"
+#     value: "true"
+#   - name: "ELASTIC_PASSWORD"
+#     valueFrom:
+#       secretKeyRef:
+#         name: elasticsearch-master-credentials
+#         key: password
+
+# Additional Configuration
+podAnnotations: {}
+podLabels: {}
+
+# Enable service for Kibana
+service:
+  type: ClusterIP
+  port: 9200
+
+# Node affinity (if required)
+nodeAffinity: {}
+
+# Enable resource management for better performance
+heapSize: "4g"
+
+# Additional settings for enhanced logging and monitoring
+logging:
+  level: info
+
+# Enable HTTP and Transport ports explicitly
+http:
+  enabled: true
+  port: 9200
+
+transport:
+  enabled: true
+  port: 9300
 
 
 helm install elasticsearch elastic/elasticsearch -f sc-values.yaml --namespace logging
