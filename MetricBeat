@@ -8,7 +8,7 @@ helm repo update
 
 Step-02: Installing Metricbeat
 # Values Link: https://github.com/elastic/helm-charts/blob/main/metricbeat/values.yaml
-# Get the content of above link and paste in local in "metricbeat-values.yaml"
+# Get the content of above link and paste in local in "metricbeat-values.yaml" or you can use values from "https://github.com/summu97/Azure-KT/blob/main/metricbeat-values.yaml"(Recomended)
 helm install metricbeat elastic/metricbeat --namespace logging -f metricbeat-values.yaml
 
 Step-03: LOGIN TO METRICBEAT PODS INDIVUDIALLY AND RUN BELOW COMMAND
