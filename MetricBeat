@@ -1,22 +1,15 @@
+USEFUL:
+helm list -n logging
+helm status elasticsearch -n logging
+------------------------------------------------------------------
 Step-01: ADD HELM REPO
 helm repo add elastic https://helm.elastic.co
 helm repo update
 
-Step-02: INSTALL METRICBEAT
-helm install metricbeat elastic/metricbeat \
-  --namespace <namespace> \
-  --set daemonset.enabled=true \
-  --set elasticsearch.hosts=["http://<elasticsearch-ip or elasticsearch svc name>:9200"]
-
-EX:
-helm install metricbeat elastic/metricbeat \
-  --namespace logging \
-  --set daemonset.enabled=true \
-  --set elasticsearch.hosts=["http://elasticsearch-master:9200"]
-
-For elasticsearch-ip or elasticsearch svc name:
-kubectl get svc -n logging
-# Take ClusterIP of elasticsearch-master and use it.
+Step-02: Installing Metricbeat
+# Values Link: https://github.com/elastic/helm-charts/blob/main/metricbeat/values.yaml
+# Get the content of above link and paste in local in "metricbeat-values.yaml"
+helm install metricbeat elastic/metricbeat --namespace logging -f metricbeat-values.yaml
 
 Step-03: LOGIN TO METRICBEAT PODS INDIVUDIALLY AND RUN BELOW COMMAND
 kubectl exec -it -n logging metricbeat-metricbeat-kjwz6 -- /bin/bash
@@ -28,12 +21,6 @@ Here above IP is kibana LB IP
 UNINSTALL METRICBEAT:
 helm uninstall metricbeat --namespace logging
 ------------------------------------------------------------------
-
-USEFUL:
-helm list -n logging
-helm status elasticsearch -n logging
-------------------------------------------------------------------
-
 
 ----
 NOTE:
