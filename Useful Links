@@ -6,3 +6,7 @@ Documentation Link: https://www.elastic.co/guide/en/elasticsearch/reference/8.5/
 Azure Storage as Repository: https://www.elastic.co/guide/en/elasticsearch/reference/8.5/repository-azure.html
 
 Metricbeat with Elasticsearch 8.x - Part 1: Install and Secure: https://youtu.be/aEaBmz5lJKw?si=HcTXMUsZklHHaZel
+
+Kube-State-Metrics: https://github.com/helm/charts/blob/master/stable/kube-state-metrics/values.yaml
+
+Metricbeat: https://github.com/elastic/helm-charts/blob/main/metricbeat/values.yaml
