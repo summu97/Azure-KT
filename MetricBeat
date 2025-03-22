@@ -11,6 +11,7 @@ helm install metricbeat elastic/metricbeat \
    --namespace logging \
    --set daemonset.enabled=true \
    --set elasticsearch.hosts=["http://elasticsearch-master:9200"]
+NOTE: If one of metricbeat pod gets restarted, then delete tat pod and a new pod will be created.
 
 Step-03: LOGIN TO METRICBEAT PODS INDIVUDIALLY AND RUN BELOW COMMAND
 kubectl exec -it -n logging metricbeat-metricbeat-kjwz6 -- /bin/bash
