@@ -4,6 +4,7 @@ Azure Snapshot Repository for Elastic (ELK Stack): https://youtu.be/ci10DpZU9Qk?
 Documentation Link: https://www.elastic.co/guide/en/elasticsearch/reference/8.5/repository-azure.html
 
 EFK Elasticsearch, Fluentd, Kibana installations using manifest files: https://youtu.be/fb3CKSJTV-Q?si=aK8ChLow9RK29ZdJ
+https://github.com/Bhoopesh123/efk-setup/tree/main
 
 Azure Storage as Repository: https://www.elastic.co/guide/en/elasticsearch/reference/8.5/repository-azure.html
 
