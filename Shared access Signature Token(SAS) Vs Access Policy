@@ -1,0 +1,3 @@
+Shared access Signature Token(SAS) Vs Access Policy
+For SAS Tokens we can't change/extend expiry time of token but when used with Access Policy we can adjust expiration date as our requirement.
+Go to Storage account--select contrainer or blob--Create Access Policy--Go to SAS(In Stored access policy select the access policy you created)--create sas token and use it.
