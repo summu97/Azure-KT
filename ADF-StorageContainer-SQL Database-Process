@@ -1,3 +1,5 @@
+Link: Copy data securely from Azure Blob storage to a SQL database by using private endpoints-ADF Tutorial: https://youtu.be/-JeRYERgGPs?si=LGrSIdgl8A6IM1p_
+
 Step-01: Upload .csv files to Storage container(Optional)
 Create a .csv file with sample data
 EX: 
