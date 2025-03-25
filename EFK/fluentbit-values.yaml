@@ -308,13 +308,13 @@ env:
   - name: ELASTICSEARCH_USERNAME
     valueFrom:
       secretKeyRef:
-        name: elasticsearch-credentials
+        name: elasticsearch-master-credentials
         key: ELASTICSEARCH_USERNAME
 
   - name: ELASTICSEARCH_PASSWORD
     valueFrom:
       secretKeyRef:
-        name: elasticsearch-credentials
+        name: elasticsearch-master-credentials
         key: ELASTICSEARCH_PASSWORD
 
 # The envWithTpl array has the same usage as "env" but supports templating.
