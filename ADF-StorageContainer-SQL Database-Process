@@ -1,0 +1,47 @@
+Step-01: Upload .csv files to Storage container(Optional)
+Create a .csv file with sample data
+EX: 
+animals.csv
+
+AnimalID,Name,Species,Age,Habitat
+1,Leo,Lion,5,Savannah
+2,Bella,Elephant,8,Forest
+3,Max,Tiger,4,Jungle
+4,Luna,Giraffe,7,Savannah
+5,Rocky,Bear,6,Mountains
+6,Daisy,Panda,3,Bamboo Forest
+
+Step-02: Allow Managed Private Endpoints in ADF
+Check if "Managed Private Endpoints" is allowed or not: Settings(Tool box icon)--Security--Managed Private Endpoints
+If not allowed follow below steps:
+ADF--settings--Connections--integration runtimes--New--Azure, Self-Hosted--Continue--Azure--Continue--Networking--name--Virtual Network Configuration(Enable)--Create 
+
+Step-03: Create Private Endpoint to Storage and SQL Server
+Managed Private Endoints--New--Search for "Azure Blob Storage" or "Azure SQL Database"--Give Name, Select subscription, Storage name(in case of Storage account), SQL DB name(in case of Azure SQL Database)-Go through remaining steps and create.
+
+Step-04: Approving Private Endpoint request in SQL and Storage
+Go to SQL/Storage--Networking--Private Endpoints--Select it-- Approve
+
+NOTE: Step-03/04 must be done for both SQL server and Storage.
+
+Step-05: Creating table in DB(Optional)
+Go to SQL DB--Quiery editor--provide your db credentials--run query to create table
+
+EX:
+CREATE TABLE Animals (
+    AnimalID INT PRIMARY KEY,
+    Name NVARCHAR(50),
+    Species NVARCHAR(50),
+    Age INT,
+    Habitat NVARCHAR(100)
+);
+
+Step-06: Pipeline
+ADF--Search(copy data)-select it 	
+Source:
+New--Azure Blob Storage--Continue--Delimited Text(As you uploaded .cv file)--Continue--Linked Service--New--Name--Connect via integration runtime(Select "Manage Virtual Network" that you created in ADF)--Select Subscription--Storage account name--Create--Select your file by browing(follow the steps)-OK
+
+Sink:
+New--Azure SQL Database--Continue--Linked Service--New--Connect via integration runtime(Select "Manage Virtual Network" that you created in ADF)--Select Subscription--Server Name--Database--Authentication type(SQL authentication)--Provide Database Credentiald--Create--Table name--OK
+
+Click on Copy Data icon and Debug
