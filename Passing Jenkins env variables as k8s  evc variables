@@ -1,0 +1,106 @@
+Option 1: Pass Environment Variables Using Deployment with Inline Variables
+
+pipeline {
+    agent any
+    environment {
+        CLIENT_ID = "${env.CLIENT_ID}"
+        CLIENT_SECRET = "${env.CLIENT_SECRET}"
+        TENANT_ID = "${env.TENANT_ID}"
+    }
+    stages {
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh '''
+                kubectl apply -f - <<EOF
+                apiVersion: apps/v1
+                kind: Deployment
+                metadata:
+                  name: my-app
+                spec:
+                  replicas: 1
+                  selector:
+                    matchLabels:
+                      app: my-app
+                  template:
+                    metadata:
+                      labels:
+                        app: my-app
+                    spec:
+                      containers:
+                      - name: my-app
+                        image: my-app-image:latest
+                        env:
+                        - name: CLIENT_ID
+                          value: "${CLIENT_ID}"
+                        - name: CLIENT_SECRET
+                          value: "${CLIENT_SECRET}"
+                        - name: TENANT_ID
+                          value: "${TENANT_ID}"
+                EOF
+                '''
+            }
+        }
+    }
+}
+--------------------
+ Option 2: Use kubectl set env To Update Environment Variables
+
+kubectl set env deployment/my-app \
+  CLIENT_ID=$CLIENT_ID \
+  CLIENT_SECRET=$CLIENT_SECRET \
+  TENANT_ID=$TENANT_ID
+=====================================
+Once you've passed the App Registration credentials as environment variables, you can access them in your application using standard environment variable access methods.
+1. Python
+
+import os
+
+client_id = os.getenv("CLIENT_ID")
+client_secret = os.getenv("CLIENT_SECRET")
+tenant_id = os.getenv("TENANT_ID")
+
+print(f"Client ID: {client_id}")
+print(f"Client Secret: {client_secret}")
+print(f"Tenant ID: {tenant_id}")
+
+2. Java
+
+public class App {
+    public static void main(String[] args) {
+        String clientId = System.getenv("CLIENT_ID");
+        String clientSecret = System.getenv("CLIENT_SECRET");
+        String tenantId = System.getenv("TENANT_ID");
+
+        System.out.println("Client ID: " + clientId);
+        System.out.println("Client Secret: " + clientSecret);
+        System.out.println("Tenant ID: " + tenantId);
+    }
+}
+
+ 3. Node.js
+
+const clientId = process.env.CLIENT_ID;
+const clientSecret = process.env.CLIENT_SECRET;
+const tenantId = process.env.TENANT_ID;
+
+console.log(`Client ID: ${clientId}`);
+console.log(`Client Secret: ${clientSecret}`);
+console.log(`Tenant ID: ${tenantId}`);
+
+ 4. C# (.NET)
+
+using System;
+
+class Program
+{
+    static void Main()
+    {
+        string clientId = Environment.GetEnvironmentVariable("CLIENT_ID");
+        string clientSecret = Environment.GetEnvironmentVariable("CLIENT_SECRET");
+        string tenantId = Environment.GetEnvironmentVariable("TENANT_ID");
+
+        Console.WriteLine($"Client ID: {clientId}");
+        Console.WriteLine($"Client Secret: {clientSecret}");
+        Console.WriteLine($"Tenant ID: {tenantId}");
+    }
+}
