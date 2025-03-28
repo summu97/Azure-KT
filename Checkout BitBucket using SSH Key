@@ -1,5 +1,4 @@
 # Generate SSH Key
-ssh-keygen
 ssh-keygen -t rsa -b 4096 -f ~/.ssh/custom_key_name
 
 
