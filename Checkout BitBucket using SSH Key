@@ -1,8 +1,10 @@
 # Generate SSH Key
 ssh-keygen
+ssh-keygen -t rsa -b 4096 -f ~/.ssh/custom_key_name
+
 
 # Copy and paste public key
-sud cat ~/.ssh/id_rsa.pub
+sud cat ~/.ssh/custom_key_name.pub
 
 # Add public key into bitbucket
 
