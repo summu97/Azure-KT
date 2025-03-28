@@ -7,7 +7,7 @@ tar -zcvf jenkins.restore.tar.gz /var/lib/jenkins/
 
 # Upload the backup to an Azure Storage container  
 az storage blob upload --account-name <STORAGE_ACCOUNT_NAME> --container-name <CONTAINER_NAME> --name jenkins.restore.tar.gz --file jenkins.restore.tar.gz  
-
+[az storage blob upload --account-name ${env.BLOB_STORAGE_ACCOUNT} --container-name jenkinsserver-config-backup --name jenkins.restore.tar.gz --file jenkins.restore.tar.gz --account-key ${env.BLOB_STORAGE_ACCOUNT_KEY}]
 
 In Restored Jenkins Server (Download & Restore Jenkins Data)
 # Stop Jenkins service  
