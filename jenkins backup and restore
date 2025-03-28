@@ -1,0 +1,26 @@
+In Parent Jenkins Server (Backup & Upload to Azure Storage)
+# Stop Jenkins service
+systemctl stop jenkins  
+
+# Create a compressed backup of Jenkins data  
+tar -zcvf jenkins.restore.tar.gz /var/lib/jenkins/  
+
+# Upload the backup to an Azure Storage container  
+az storage blob upload --account-name <STORAGE_ACCOUNT_NAME> --container-name <CONTAINER_NAME> --name jenkins.restore.tar.gz --file jenkins.restore.tar.gz  
+
+
+In Restored Jenkins Server (Download & Restore Jenkins Data)
+# Stop Jenkins service  
+systemctl stop jenkins  
+
+# Download the backup file from Azure Storage  
+az storage blob download --account-name <STORAGE_ACCOUNT_NAME> --container-name <CONTAINER_NAME> --name jenkins.restore.tar.gz --file jenkins.restore.tar.gz  
+
+# Remove existing Jenkins data  
+rm -rf /var/lib/jenkins  
+
+# Extract the backup  
+tar -zxvf jenkins.restore.tar.gz -C /  
+
+# Start Jenkins service  
+systemctl start jenkins
