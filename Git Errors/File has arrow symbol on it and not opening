@@ -1,0 +1,25 @@
+git ls-files --stage
+ 
+Remove submodule references:
+git rm --cached App-Deploy-ARM-Templates-Assessment
+git rm --cached App-Deploy-Terraform-Assessment
+git rm --cached Azure-2-tier-Assessment
+git rm --cached GCP-IAC-Project
+ 
+ 
+Delete the .git metadata inside each submodule directory (if present):
+rm -rf App-Deploy-ARM-Templates-Assessment/.git
+rm -rf App-Deploy-Terraform-Assessment/.git
+rm -rf Azure-2-tier-Assessment/.git
+rm -rf GCP-IAC-Project/.git
+ 
+ 
+Add the folders back as normal directories:
+git add App-Deploy-ARM-Templates-Assessment
+git add App-Deploy-Terraform-Assessment
+git add Azure-2-tier-Assessment
+git add GCP-IAC-Project
+ 
+Commit and push the changes:
+git commit -m "Converted submodules to normal folders"
+git push origin <branch-name>
