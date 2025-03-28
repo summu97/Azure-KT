@@ -1,0 +1,15 @@
+# Generate SSH Key
+ssh-keygen
+
+# Copy and paste public key
+sud cat ~/.ssh/id_rsa.pub
+
+# Add public key into bitbucket
+
+# Add private key in KeyVault
+
+# use the key as env variables in Jenkins pipeline and use it in checkout stage
+
+NOTE: Use SSH url for checkout.
+
+Link: https://www.coachdevops.com/2021/06/how-to-integrate-jenkins-github-using.html
