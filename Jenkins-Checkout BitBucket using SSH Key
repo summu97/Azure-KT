@@ -1,3 +1,6 @@
+ERROR NOTE: Azure KeyVault dont accept OpenSSH Key format and ssh-keygen will create Openssh keys thats why put your private key in jenkins credentials.
+
+
 # Generate SSH Key
 ssh-keygen -t rsa -b 4096 -f ~/.ssh/custom_key_name
 
