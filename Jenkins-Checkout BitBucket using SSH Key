@@ -1,0 +1,34 @@
+# Generate SSH Key
+ssh-keygen -t rsa -b 4096 -f ~/.ssh/custom_key_name
+
+
+# Copy and paste public key
+sud cat ~/.ssh/custom_key_name.pub
+
+# Add public key into bitbucket
+BitBucket--Settings(top right)--personal bitbucket settings--security(SSH Keys)--add key...
+
+# Add private key in Jenkins
+Manage Jenkins--Credentials--Global--SSH username and Acesskey--add your key
+
+# Change setting in Jenkins
+manage jenkins--security--Git Host Key Verification Configuration--Host Key Verification Strategy--accept first connection
+
+# Create sample pipeline and test connection
+
+pipeline {
+    agent any
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', 
+                    credentialsId: 'jenkins-bitbucket-key', 
+                    url: 'git@bitbucket.org:sumanthbade97/bitbucket-test-repo.git'
+            }
+        }
+    }
+}
+ 
+ 
+====
+Link: https://www.coachdevops.com/2021/06/how-to-integrate-jenkins-github-using.html
