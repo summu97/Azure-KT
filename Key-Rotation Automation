@@ -1,0 +1,112 @@
+ROTATE STORAGE ACCOUNT KEYS
+=======================================
+storage_account_name="<storage-account-name>"
+resource_group="<resource-group-name>"
+keyvault_name="<keyvault-name>"
+secret_name="storage-access-key"
+
+# Regenerate a new storage account key
+az storage account keys renew --resource-group $resource_group --account-name $storage_account_name --key primary
+
+# Fetch the new key
+new_key=$(az storage account keys list --resource-group $resource_group --account-name $storage_account_name --query "[0].value" --output tsv)
+
+# Replace the existing secret in Key Vault
+az keyvault secret set --vault-name $keyvault_name --name $secret_name --value "$new_key"
+
+
+ROTATE ACR KEYS
+=======================================
+acr_name="<acr-name>"
+resource_group="<resource-group-name>"
+keyvault_name="<keyvault-name>"
+secret_name="acr-access-key"
+
+# Regenerate ACR access key (primary password)
+az acr credential regenerate --name $acr_name --resource-group $resource_group --password-name password
+
+# Fetch the new ACR access key
+new_acr_key=$(az acr credential show --name $acr_name --resource-group $resource_group --query "passwords[0].value" --output tsv)
+
+# Replace the existing secret in Azure Key Vault
+az keyvault secret set --vault-name $keyvault_name --name $secret_name --value "$new_acr_key"
+
+
+
+To rotate both primary and secondary passwords, modify the script:
+# Regenerate both ACR access keys
+az acr credential regenerate --name $acr_name --resource-group $resource_group --password-name password
+az acr credential regenerate --name $acr_name --resource-group $resource_group --password-name password2
+
+# Fetch the new keys
+new_acr_key1=$(az acr credential show --name $acr_name --resource-group $resource_group --query "passwords[0].value" --output tsv)
+new_acr_key2=$(az acr credential show --name $acr_name --resource-group $resource_group --query "passwords[1].value" --output tsv)
+
+# Store both keys in Key Vault
+az keyvault secret set --vault-name $keyvault_name --name acr-access-key1 --value "$new_acr_key1"
+az keyvault secret set --vault-name $keyvault_name --name acr-access-key2 --value "$new_acr_key2"
+--------------------------------------------------------
+
+pipeline {
+    agent any
+    environment {
+        RESOURCE_GROUP = "<resource-group-name>"
+        VM_NAME = "<vm-name>"
+        ADMIN_USER = "<admin-username>"
+        KEYVAULT_NAME = "<keyvault-name>"
+        SECRET_NAME = "vm-ssh-private-key"
+        SSH_KEY_PATH = "/var/lib/jenkins/.ssh/new-azure-key"
+    }
+    stages {
+        stage('Generate SSH Key') {
+            steps {
+                script {
+                    sh '''
+                    mkdir -p /var/lib/jenkins/.ssh
+                    ssh-keygen -t rsa -b 4096 -f "$SSH_KEY_PATH" -N "" -q
+                    '''
+                }
+            }
+        }
+        stage('Update SSH Key on VM') {
+            steps {
+                script {
+                    sh '''
+                    az vm user update --resource-group "$RESOURCE_GROUP" --name "$VM_NAME" --username "$ADMIN_USER" --ssh-key-value "$(cat ${SSH_KEY_PATH}.pub)"
+                    '''
+                }
+            }
+        }
+        stage('Store SSH Key in Key Vault') {
+            steps {
+                script {
+                    sh '''
+                    az keyvault secret set --vault-name "$KEYVAULT_NAME" --name "$SECRET_NAME" --value "$(cat $SSH_KEY_PATH)"
+                    '''
+                }
+            }
+        }
+    }
+    post {
+        success {
+            echo "✅ SSH Key Rotation Completed!"
+        }
+        failure {
+            echo "❌ SSH Key Rotation Failed!"
+        }
+    }
+}
+----------------
+Update Jenkins Schedule (Cron Format)
+Go to Jenkins Dashboard → Your Job → Configure
+
+Scroll to "Build Triggers"
+
+Enable "Build periodically"
+
+In the Schedule field, enter: H 0 */15 * *  
+------------------------
+Schedule Expression	Runs On
+H 0 1,16 * *		1st and 16th of each month at midnight
+H 12 */15 * *		Every 15 days at noon
+H 0 1,16 * *		1st and 16th of every month at midnight
