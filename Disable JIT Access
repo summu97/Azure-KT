@@ -1,0 +1,14 @@
+1️⃣ Go to Microsoft Defender for Cloud
+Log in to Azure Portal → Search for Defender for Cloud.
+In the Left Menu, go to Workload Protections
+Click on Just-In-Time VM Access under Advanced Protection.
+
+2️⃣ Select the VM
+Find the VM where JIT is enabled.
+Click on the VM Name to open its settings.
+
+3️⃣ Disable JIT Access
+Click on the "Edit" button at the top.
+Under the JIT configuration, find Port 22 (SSH) or any other ports listed.
+Click Remove for each listed port.
+Click Save to apply the changes.
