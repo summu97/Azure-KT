@@ -1,0 +1,7 @@
+This clears the history for the current session. To also remove the history file, run:
+
+history -c && history -w
+Or manually delete the history file:
+
+rm ~/.bash_history
+Note: If you are in a remote SSH session, log out after running the command to prevent history from being saved.
