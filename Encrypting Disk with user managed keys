@@ -1,0 +1,7 @@
+To encrypt disk with keys you've generated in KeyVault:
+1. Generate a key in KeyVault.
+2. Create Disk Encryption Set: Go to "Disk Encryption Set"--Create--Provide(Resource group--name--region--Encryption type(Double encryption with platform managed & customer-managed keys)-
+-Key-vault(Select your keyvault)--Key(Select the key youve generated earlier)--version--Review + Create)
+3. Create disk--in Encryption section select "Double encryption............"--choose the "Encryption set created earlier" and proceed
+
+NOTE: This Encryption process also works for other resources also.
