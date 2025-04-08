@@ -18,3 +18,4 @@ Pushgateway        	9091	For short-lived jobs (push model)
 📌 Ensure these ports are open in your VM/network firewall if you're accessing externally or scraping from other nodes.
 
 Copy prometheus.sh to your local and run: sh prometheus.sh
+To access: VM-PublicIP:9090
