@@ -1,0 +1,10 @@
+Check for zombie or stuck processes:
+ps aux --sort=-%cpu | head -10
+It lists top 10 CPU consumers.
+
+To stop the high CPU usage:
+pkill -f simulate_load.sh
+or 
+kill -9 10314 10315 10330 10331
+
+
