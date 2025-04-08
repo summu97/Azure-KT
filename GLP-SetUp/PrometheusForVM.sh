@@ -19,7 +19,7 @@ fi
 
 # Download and extract Prometheus
 echo "Downloading Prometheus..."
-wget https://github.com/prometheus/prometheus/releases/download/v${PROM_VERSION}/prometheus-${PROM_VERSION}.linux-amd64.tar.gz
+wget https://github.com/prometheus/prometheus/releases/download/v${PROM_VERSION}/prometheus-${PROM_VERSION}.linux-amd64.tar.gz   
 
 echo "Extracting Prometheus..."
 tar -xvf prometheus-${PROM_VERSION}.linux-amd64.tar.gz
@@ -69,6 +69,22 @@ ExecStart=/usr/local/bin/prometheus \\
 [Install]
 WantedBy=multi-user.target
 EOF'
+
+sudo cat <<EOF | sudo tee /etc/prometheus/prometheus.yml
+global:
+  scrape_interval: 10s
+
+scrape_configs:
+  - job_name: 'prometheus_metrics'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9090']
+  - job_name: 'Jenkins_exporter_metrics'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9100']
+EOF
+
 
 # Reload systemd and start service
 echo "Starting Prometheus service..."
