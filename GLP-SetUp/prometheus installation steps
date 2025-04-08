@@ -1,0 +1,20 @@
+System Requirements (Minimum Recommended)
+Resource    	Minimum	    Recommended (for production)
+CPU	          1 vCPU	    2–4 vCPUs (depending on scrape targets)
+RAM	          2 GB	      4–8 GB
+Disk        	10 GB	      50–100 GB+ (SSD preferred for time-series DB)
+OS	Ubuntu 20.04+, CentOS 7+, Debian, etc.	Any Linux (x86_64/amd64)
+💡 Prometheus is CPU- and disk-heavy, especially with high cardinality or many targets. SSDs improve performance drastically.
+
+
+
+
+Default Network Requirements
+Service	            Port	Description
+Prometheus	        9090	Web UI and API
+Node Exporter      	9100	Default node-level metrics
+Blackbox Exporter  	9115	Probe HTTP, ICMP, TCP, DNS, etc.
+Pushgateway        	9091	For short-lived jobs (push model)
+📌 Ensure these ports are open in your VM/network firewall if you're accessing externally or scraping from other nodes.
+
+Copy prometheus.sh to your local and run: sh prometheus.sh
