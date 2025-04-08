@@ -1,0 +1,14 @@
+Prerequesites: 
+1. Open port '3000'
+
+2. Supported OS
+Ubuntu 18.04, 20.04, 22.04
+Debian 10, 11, etc.
+
+3. System Requirements
+CPU: Minimum 1 CPU core
+Memory: At least 512 MB RAM (1 GB recommended)
+Disk: 100 MB free for Grafana itself (more for logs/data)
+
+Copy grafana.sh file to local and run: sh grafana.sh
+To access: VM-PublicIP:3000
