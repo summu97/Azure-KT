@@ -1,0 +1,47 @@
+#!/bin/bash
+
+set -e
+
+echo "📦 Updating package list..."
+sudo apt update -y
+
+echo "⬇️ Downloading Node Exporter v1.5.0..."
+wget https://github.com/prometheus/node_exporter/releases/download/v1.5.0/node_exporter-1.5.0.linux-amd64.tar.gz
+
+echo "📂 Extracting archive..."
+tar -xf node_exporter-1.5.0.linux-amd64.tar.gz
+
+echo "🚚 Moving binary to /usr/local/bin..."
+sudo mv node_exporter-1.5.0.linux-amd64/node_exporter /usr/local/bin/
+
+echo "🧹 Cleaning up..."
+rm -rf node_exporter-1.5.0.linux-amd64*
+  
+echo "👤 Creating node_exporter user..."
+sudo useradd -rs /bin/false node_exporter || echo "User 'node_exporter' already exists."
+
+echo "📝 Creating systemd service file..."
+sudo tee /etc/systemd/system/node_exporter.service > /dev/null <<EOF
+[Unit]
+Description=Node Exporter
+After=network.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart=/usr/local/bin/node_exporter
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+echo "🔄 Reloading systemd..."
+sudo systemctl daemon-reload
+
+echo "✅ Enabling and starting node_exporter service..."
+sudo systemctl enable node_exporter
+sudo systemctl start node_exporter
+
+echo "📋 Node Exporter Status:"
+sudo systemctl status node_exporter --no-pager
