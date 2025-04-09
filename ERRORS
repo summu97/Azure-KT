@@ -9,3 +9,10 @@ yourusername:x:1001:1001::/home/yourusername:/bin/bash
 If the shell is something like '/bin/false' or '/sbin/nologin', run this to fix it: 'usermod -s /bin/bash yourusername'
 
 Restart the VM
+---------------------------
+If you want to create a new Virtual Machine from disk snapshot then follow below steps:
+- Create disk from snapshot.
+- Create new VM.
+- Swap new disk with backup snapshot disk.
+WHY swapping?
+Because, when you create a new vm with disk then Azure will remove old users configuration and create VM with new user details.
