@@ -1,0 +1,11 @@
+ERROR: Cannot execute /bin/bash: Permission denied
+If you're getting a permission denied error even after pressing Enter in the Serial Console, it usually means your default shell is broken (like /bin/bash is missing or not executable), and you're locked out of a login shell.
+
+Step-by-step to fix /bin/bash: Permission denied without logging in:
+Go to the Azure Portal--Navigate to Virtual Machines--In the left-hand menu of your VM, scroll down to Operations → click Run command--Click on RunShellScript(RUN: chmod +x /bin/bash After RUN: grep yourusername /etc/passwd)
+If you see something like then its running fine:
+yourusername:x:1001:1001::/home/yourusername:/bin/bash
+
+If the shell is something like '/bin/false' or '/sbin/nologin', run this to fix it: 'usermod -s /bin/bash yourusername'
+
+Restart the VM
