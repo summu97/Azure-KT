@@ -16,5 +16,6 @@ sudo do-release-upgrade -d
 5. Reboot after upgrade
 sudo reboot
 
+RECOMENDED way: SERIAL CONSOLE--'sudo -i'-- do-release-upgrade
 
 Verify upgrade: lsb_release -a
