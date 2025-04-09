@@ -14,3 +14,4 @@ Copy grafana.sh file to local and run: sh grafana.sh
 To access: VM-PublicIP:3000
 
 Default Username and Password: admin
+For dashboard id for metric beat: 1860
