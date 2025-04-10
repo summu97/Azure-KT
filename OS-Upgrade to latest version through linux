@@ -1,3 +1,5 @@
+To check if any new upgradable versions available: sudo do-release-upgrade -c
+
 1. Update current system
 sudo apt update && sudo apt upgrade -y
 sudo apt dist-upgrade -y
