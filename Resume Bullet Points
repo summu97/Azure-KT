@@ -1,0 +1,7 @@
+Performed OS upgrades and kernel patches on Ubuntu systems, ensuring minimal downtime and maintaining system stability in production environments.
+
+Diagnosed and resolved boot disk and startup issues using Azure Serial Console and Boot Diagnostics during critical failure scenarios.
+
+Developed and deployed a full monitoring and logging stack using Prometheus, Grafana, and Loki, enabling real-time system metrics, log aggregation, and custom alerting dashboards.
+
+Configured and fine-tuned system logging and performance monitoring, improving visibility and proactive incident response.
