@@ -1,23 +1,8 @@
-To check if any new upgradable versions available: sudo do-release-upgrade -c
-
-1. Update current system
-sudo apt update && sudo apt upgrade -y
-sudo apt dist-upgrade -y
-
-2. Install update-manager-core
-sudo apt install update-manager-core -y
-
-Ensure this line exists in your config: grep Prompt /etc/update-manager/release-upgrades
-If it shows Prompt=lts, you're good.
-
-3. Start the upgrade process
+Upgrading when connected to VM using SSH connect.
+Pre-requesites: Continuous Network and Power
+RUN:
+sudo apt update
+sudo apt upgrade -y
+sudo do-release-upgrade -c
 sudo do-release-upgrade
-🟡 If it says “No new release found”, use:
-sudo do-release-upgrade -d
-
-5. Reboot after upgrade
-sudo reboot
-
-RECOMENDED way: SERIAL CONSOLE--'sudo -i'-- do-release-upgrade
-
-Verify upgrade: lsb_release -a
+Go with the steps it prompt and mostly pass 'y'
