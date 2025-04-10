@@ -1,0 +1,115 @@
+pushgateway:
+sudo useradd --system --no-create-home --shell /bin/false pushgateway
+wget https://github.com/prometheus/pushgateway/releases/download/v1.11.1/pushgateway-1.11.1.linux-amd64.tar.gz
+# Get from this: https://github.com/prometheus/pushgateway/releases
+tar -xvf pushgateway-1.11.1.linux-amd64.tar.gz
+sudo mv pushgateway-1.11.1.linux-amd64/pushgateway /usr/local/bin
+sudo vim /etc/systemd/system/pushgateway.service
+[Unit]
+Description=Pushgateway
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=pushgateway
+Group=pushgateway
+Type=simple
+ExecStart=/usr/local/bin/pushgateway
+Restart=on-failure
+RestartSec=5
+
+# Start rate limiting
+StartLimitIntervalSec=500
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target
+
+sudo systemctl enable pushgateway
+sudo systemctl start pushgateway
+
+sudo vim /etc/prometheus/prometheus.yml
+
+  - job_name: 'pushgateway'
+    honor_labels: true
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9100']
+
+  - job_name: 'node_export'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['localhost:9100']
+
+promtool check config /etc/prometheus/prometheus.yml
+sudo systemctl restart prometheus
+=============================
+AlertManager:
+Releases: https://github.com/prometheus/alertmanager/releases
+
+sudo useradd --system --no-create-home --shell /bin/false alertmanager
+wget https://github.com/prometheus/alertmanager/releases/download/v0.28.1/alertmanager-0.28.1.linux-amd64.tar.gz
+tar -xvf alertmanager-0.28.1.linux-amd64.tar.gz
+sudo mkdir -p /alertmanager-data /etc/alertmanager
+sudo mv alertmanager-0.28.1.linux-amd64/alertmanager /usr/local/bin
+sudo mv alertmanager-0.28.1.linux-amd64/alertmanager.yml /etc/alertmanager
+sudo vim /etc/systemd/system/alertmanager.service
+[Unit]
+Description=Alertmanager
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=pushgateway
+Group=pushgateway
+Type=simple
+ExecStart=/usr/local/bin/alertmanager \
+  --storage.path=/alertmanager-data \
+  --config.file=/etc/alertmanager/alertmanager.yml
+Restart=on-failure
+RestartSec=5
+
+# Start rate limiting
+StartLimitIntervalSec=500
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target
+
+sudo systemctl enable alertmanager
+sudo systemctl start alertmanager
+NOTE: Open port '9093'
+
+
+Create alert:
+sudo vim /etc/prometheus/dead-mans-snitch-rule.yml
+groups:
+  - name: dead-mans-snitch
+    rules:
+      - alert: DeadMansSnitch
+        expr: vector(1)
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          description: "This is a Dead Man's Snitch alert – it should always fire."
+
+
+
+NOTE: In almost every prometheus setup you have alert setup, It is used to validate the monitoring system itself. Ex: It can be integrated with DeadManSnitch service. If something goes wrong with prometheus or  Alertmanager, you will get an emergency notification that your notification system is down.
+# You need to specify the location of alertmanager in:
+sudo vim /etc/prometheus/prometheus.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - "localhost:9093"  # Replace with your Alertmanager's hostname or IP and port
+
+rule_files:
+  - "dead-mans-snitch-rule.yml"
+
+promtool check config /etc/prometheus/prometheus.yml
+sudo systemctl restart prometheus
+
+NOTE: Alert manager can be configured to send emails, can be integrated with pagerduty and many
