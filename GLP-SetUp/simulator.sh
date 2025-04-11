@@ -36,5 +36,5 @@ wait
 # chmod +x simulate_load.sh
 # ./simulate_load.sh
 # Use Ctrl+C in the terminal to stop the load.
-# To kill the process: pkill -f simulate_load.sh; pkill -f "while :"; pkill -f python3
+# To kill the process: sudo pkill -f simulate_load.sh && sudo pkill -f "while :" && sudo pkill -f python3
 
