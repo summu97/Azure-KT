@@ -1,0 +1,122 @@
+node_exporter image: quay.io/prometheus/node-exporter:latest
+GitHub: https://github.com/prometheus/node_exporter
+
+node_exporter_daemonset.yml
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+  namespace: monitoring
+  labels:
+    app: node-exporter
+spec:
+  selector:
+    matchLabels:
+      app: node-exporter
+  template:
+    metadata:
+      labels:
+        app: node-exporter
+    spec:
+      hostNetwork: true
+      hostPID: true
+      containers:
+        - name: node-exporter
+          image: quay.io/prometheus/node-exporter:latest
+          ports:
+            - containerPort: 9100
+              hostPort: 9100   # 💡 Expose on host's private IP
+              name: metrics
+          resources:
+            requests:
+              memory: 50Mi
+              cpu: 100m
+            limits:
+              memory: 100Mi
+              cpu: 200m
+          args:
+            - --path.rootfs=/host
+          volumeMounts:
+            - name: proc
+              mountPath: /host/proc
+              readOnly: true
+            - name: sys
+              mountPath: /host/sys
+              readOnly: true
+            - name: root
+              mountPath: /host
+              readOnly: true
+      volumes:
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: root
+          hostPath:
+            path: /
+      tolerations:
+        - key: "node-role.kubernetes.io/master"
+          operator: "Exists"
+          effect: "NoSchedule"
+
+
+kubectl create namespace monitoring
+kubectl apply -f node-exporter.yaml
+kubectl get pods -n monitoring -l app=node-exporter -o wide
+
+
+vim /etc/prometheus/prometheus.yml
+  - job_name: 'aks-node-exporter'
+    scrape_interval: 5s
+    static_configs:
+      - targets:
+          - 10.0.1.4:9100
+          - 10.0.1.5:9100
+          - 10.0.1.6:9100
+
+Ex:
+  - job_name: 'kuberbetes-node-exporter'
+    scrape_interval: 10s
+    static_configs:
+      - targets:
+          - 10.224.0.5:9100
+          - 10.224.0.4:9100
+
+
+sudo systemctl restart prometheus
+ADD NSG rule from VM(Prometeus) PrivateIP to AKS via '9100'.
+ADD peering etween networks:
+From monitoring-vnet to aks-vnet:
+az network vnet peering create \
+  --name monitoring-to-aks \
+  --resource-group <your-resource-group> \
+  --vnet-name monitoring-vnet \
+  --remote-vnet /subscriptions/<sub-id>/resourceGroups/<aks-rg>/providers/Microsoft.Network/virtualNetworks/aks-vnet \
+  --allow-vnet-access
+EX:
+az network vnet peering create \
+  --name monitoring-to-aks \
+  --resource-group GLP-ResourceGroup \
+  --vnet-name GLP-VNet \
+  --remote-vnet /subscriptions/abc86e61-76b7-4759-bb79-1e3e27e93f0e/resourceGroups/MC_GLP-ResourceGroup_GLP-AKSCluster_eastus/providers/Microsoft.Network/virtualNetworks/aks-vnet-37758318 \
+  --allow-vnet-access
+
+
+From aks-vnet to monitoring-vnet:
+az network vnet peering create \
+  --name aks-to-monitoring \
+  --resource-group <aks-resource-group> \
+  --vnet-name aks-vnet \
+  --remote-vnet /subscriptions/<sub-id>/resourceGroups/<monitoring-rg>/providers/Microsoft.Network/virtualNetworks/monitoring-vnet \
+  --allow-vnet-access
+
+EX:
+az network vnet peering create \
+  --name aks-to-monitoring \
+  --resource-group MC_GLP-ResourceGroup_GLP-AKSCluster_eastus \
+  --vnet-name aks-vnet-37758318 \
+  --remote-vnet /subscriptions/abc86e61-76b7-4759-bb79-1e3e27e93f0e/resourceGroups/GLP-ResourceGroup/providers/Microsoft.Network/virtualNetworks/GLP-VNet \
+  --allow-vnet-access
