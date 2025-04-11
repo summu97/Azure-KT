@@ -1,0 +1,69 @@
+
+✅ Step-by-Step: Generate Gmail App Password (for Grafana, etc.)
+Go to Gmail--Profile Icon--manage your google account--2-step verification--app password--provide your app name and you'll be getting an password keep it aside.
+
+-----------------------------------------
+
+
+✅ Step-by-Step: Configure Gmail SMTP in Grafana (grafana.ini)
+📌 Prerequisites
+You have Grafana v11+ installed.
+You have a Gmail account with 2FA enabled.
+You've generated a Gmail App Password.
+
+
+🧾 Step 1: Edit Grafana Configuration
+sudo vim /etc/grafana/grafana.ini
+# Scroll or search (Ctrl + W) for the [smtp] section and uncomment & update it like this:
+[smtp]
+enabled = true
+host = smtp.gmail.com:587
+user = your-email@gmail.com
+password = your-app-password
+from_address = your-email@gmail.com
+from_name = Grafana Alerts
+skip_verify = false
+
+Ex:
+[smtp]
+enabled = true
+host = smtp.gmail.com:587
+user = sumo1998sumanth@gmail.com
+password = nwljqygwwodnzeej
+from_address = sumo1998sumanth@gmail.com
+from_name = Grafana Alerts
+skip_verify = false
+
+Replace:
+your-email@gmail.com with your actual Gmail
+your-app-password with the 16-character Gmail App Password
+Also allow port 587'
+
+🔁 Step 2: Restart Grafana
+sudo systemctl restart grafana-server
+sudo systemctl status grafana-server
+
+
+📬 Step 3: Add Email Contact Point in Grafana UI
+Open Grafana in your browser:
+http://<your-ip>:3000
+Log in → Go to Alerting → Contact points
+Click ➕ New contact point
+Name: email-alerts
+Type: Email
+Addresses: your Gmail address
+Click Save contact point
+
+
+🔔 Step 4: Create a Notification Policy
+Go to Alerting → Notification policies
+Click ➕ New policy
+Set the contact point to email-alerts
+Matchers: leave as default (for all alerts)
+Click Save policy
+
+
+Creating Alert rule:
+Go to dashboard--select the metric type that appears to you--Ex: CPU--three dots--more--new alert rule--go through all steps and save.
+
+
