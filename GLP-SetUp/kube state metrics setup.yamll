@@ -1,0 +1,177 @@
+kubectl create namespace monitoring
+sudo vim kube-state-metrics.yml
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kube-state-metrics
+  namespace: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kube-state-metrics
+rules:
+  - apiGroups: [""]
+    resources:
+      - pods
+      - nodes
+      - services
+      - endpoints
+      - persistentvolumeclaims
+      - persistentvolumes
+      - resourcequotas
+      - limitranges
+      - secrets
+      - configmaps   # ← added here
+    verbs: ["list", "watch"]
+  - apiGroups: ["apps"]
+    resources:
+      - statefulsets
+      - daemonsets
+      - deployments
+      - replicasets
+      - deployments/scale
+    verbs: ["list", "watch"]
+  - apiGroups: ["batch"]
+    resources: ["cronjobs", "jobs"]
+    verbs: ["list", "watch"]
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["list", "watch"]
+  - apiGroups: ["policy"]
+    resources: ["poddisruptionbudgets"]
+    verbs: ["list", "watch"]
+  - apiGroups: ["storage.k8s.io"]
+    resources: ["storageclasses", "volumeattachments"]
+    verbs: ["list", "watch"]
+  - apiGroups: ["admissionregistration.k8s.io"]
+    resources: ["validatingwebhookconfigurations", "mutatingwebhookconfigurations"]
+    verbs: ["list", "watch"]
+  - apiGroups: ["networking.k8s.io"]
+    resources: ["networkpolicies", "ingresses"]
+    verbs: ["list", "watch"]
+  - apiGroups: [""]
+    resources: ["replicationcontrollers", "namespaces"]
+    verbs: ["list", "watch"]
+  - apiGroups: ["certificates.k8s.io"]
+    resources: ["certificatesigningrequests"]
+    verbs: ["list", "watch"]
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kube-state-metrics
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kube-state-metrics
+subjects:
+  - kind: ServiceAccount
+    name: kube-state-metrics
+    namespace: monitoring
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-state-metrics
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: kube-state-metrics
+  template:
+    metadata:
+      labels:
+        app: kube-state-metrics
+    spec:
+      serviceAccountName: kube-state-metrics
+      automountServiceAccountToken: true
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet	
+      containers:
+        - name: kube-state-metrics
+          image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.10.1
+          ports:
+            - containerPort: 8080
+              name: http-metrics
+            - containerPort: 8081
+              name: telemetry
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            timeoutSeconds: 5
+      nodeSelector:
+        kubernetes.azure.com/role: agent # This ensures the DaemonSet runs only on agent nodes (not control plane nodes)
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kube-state-metrics
+  namespace: monitoring
+  labels:
+    app: kube-state-metrics
+spec:
+  type: ClusterIP
+  ports:
+    - name: http-metrics
+      port: 8080
+      targetPort: http-metrics
+    - name: telemetry
+      port: 8081
+      targetPort: telemetry
+  selector:
+    app: kube-state-metrics
+
+
+
+
+
+kubectl apply -f kube-state-metrics.yml
+# kubectl rollout restart daemonset kube-state-metrics -n monitoring
+
+
+sudo vim /etc/prometheus/prometheus.yml
+
+
+  - job_name: 'kube-state-metrics'
+    static_configs:
+      - targets:
+          - 10.224.0.5:8080
+          - 10.224.0.4:8080 
+
+nodepoolvm-privateip:8080
+
+sudo systemctl restart prometheus.service
+NOTE: add nsg rule in aks nsg from vm private ip to pool vm'v privateip on '8080'.
+To check if targets are appied succesfully or not:
+In Prometheus UI (http://<prometheus-ip>:9090), go to Status > Targets and confirm kube-state-metrics targets are UP.
+
+
+2. Add Prometheus as a Data Source in Grafana
+Open Grafana (http://<grafana-ip>:3000)
+Go to ⚙️ Configuration > Data Sources
+Click Add data source
+Choose Prometheus
+Enter the URL of your Prometheus server (e.g., http://prometheus.monitoring.svc.cluster.local:9090 or http://<IP>:9090)
+Click Save & Test
+
+
+3. Import a Prebuilt Dashboard for kube-state-metrics
+In Grafana, click the + sign > Import
+
+In the Import via grafana.com field, enter one of the following popular Dashboard IDs:
+
+Dashboard Name			ID
+Kubernetes State Metrics (KSM)	13332
+Kubernetes Cluster Monitoring	8588
+Kube-State-Metrics v2 Overview	11300
+
+
