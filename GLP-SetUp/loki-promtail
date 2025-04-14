@@ -160,3 +160,48 @@ Step 2: Kill the Process 'sudo kill <PID>'
 NOTE:
 Enable Identity in Jenkins VM and add role assignment--scope(storage)--select your storage account--give role and save
 Create a container an get its SAS tokens.
+------------------------------------------------
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: debug
+  grpc_server_max_concurrent_streams: 1000
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /home/azureuser/loki
+  storage:
+    filesystem:
+      chunks_directory: /home/azureuser/loki/chunks
+      rules_directory: /home/azureuser/loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100
+
+limits_config:
+  ingestion_rate_strategy: global
+  enforce_metric_name: false
+  volume_enabled: true
+
+schema_config:
+  configs:
+    - from: "2020-12-11"
+      index:
+        period: 24h
+        prefix: index_
+      object_store: azure
+      schema: v13
+      store: tsdb
+
+ruler:
+  alertmanager_url: http://localhost:9093
