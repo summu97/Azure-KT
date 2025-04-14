@@ -1,4 +1,4 @@
-
+https://medium.com/cloud-native-daily/monitoring-kubernetes-pods-resource-usage-with-prometheus-and-grafana-c17848febadc
 ============================
 sudo vim prometheus-api-user.yaml
 apiVersion: v1
