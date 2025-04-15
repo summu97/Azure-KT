@@ -1,0 +1,138 @@
+Loki Installation Setup:
+ Disk & Memory (Approximate)
+CPU: 1 vCPU minimum (more if high ingestion rate)
+RAM: 1–2 GB minimum
+Disk: 1 GB+ (depends on log volume)
+
+Storage Paths (from config)
+/home/azureuser/loki/ – Base path prefix
+chunks/ – Stores log chunks
+rules/ – Stores alerting rules
+
+Ports to Allow:
+Port 3100: For Promtail to send logs to Loki.
+
+Port 9080: For API access to Loki (HTTP queries).
+==========================================
+Instaling Loki:
+
+sudo apt install unzip -y
+
+curl -O -L "https://github.com/grafana/loki/releases/download/v2.9.12/loki-linux-amd64.zip" 
+unzip "loki-linux-amd64.zip"
+
+wget https://raw.githubusercontent.com/grafana/loki/main/cmd/loki/loki-local-config.yaml
+(In this .yaml file you can specify the place where you want to store your logs)
+(When you run this, you get a .yaml file. It has all the configuration details and you can find all the details like server, storage etc.)
+
+
+----
+sudo vim loki-local-config.yaml
+
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: debug
+  grpc_server_max_concurrent_streams: 1000
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /home/azureuser/installations/loki
+  storage:
+    filesystem:
+      chunks_directory: /home/azureuser/installations/loki/chunks
+      rules_directory: /home/azureuser/installations/loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100
+
+schema_config:
+  configs:
+    - from: 2020-10-24
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: "index_"  # Prefix for the index files
+        period: 24h        # New index every day (24 hours)
+
+
+----
+sudo mkdir -p /home/azureuser/installations/loki/{chunks,rules}
+sudo chown -R azureuser:azureuser /home/azureuser/installations/loki
+
+
+sudo nohup ./loki-linux-amd64 -config.file=loki-local-config.yaml -config.expand-env=true > loki.log 2>&1 &
+=================================================================================
+Promtail Installation Setup:
+
+wget https://github.com/grafana/loki/releases/download/v2.9.13/promtail-linux-amd64.zip
+unzip promtail-linux-amd64.zip
+wget https://raw.githubusercontent.com/grafana/loki/main/clients/cmd/promtail/promtail-local-config.yaml
+(run these steps on all the servers where you want to install promtail)
+
+sudo vim promtail-local-config.yaml
+
+---
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://localhost:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: varlogs
+          __path__: /var/log/*log
+          stream: stdout
+
+  - job_name: docker-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker
+          __path__: /var/lib/docker/containers/*/*.log
+          stream: stdout
+---
+
+sudo nohup ./promtail-linux-amd64 -config.file=promtail-local-config.yaml > promtail.log 2>&1 &
+
+
+ps aux | grep promtail
+sudo kill 
+
+========================================================
+In chunks folder you'll see index created and inside it you will see a .gz file:
+Step 1: Identify File Type
+file 1744721455-compactor-1744712874459-1744720501966-862ec9a3.tsdb.gz
+You’ll likely see output like: gzip compressed data
+
+Step 2: Extract the File
+sudo gunzip file 1744721455-compactor-1744712874459-1744720501966-862ec9a3.tsdb.gz
+
+This will give you: 1744717550-Central-Monitor-VM-1744712820781901988.tsdb
+
+Step 2: Check file type
+file 1744717550-Central-Monitor-VM-1744712820781901988.tsdb
+Try strings to extract human-readable content: strings 1744721455-compactor-1744712874459-1744720501966-862ec9a3.tsdb | less
+
+ 
