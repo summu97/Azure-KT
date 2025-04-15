@@ -1,3 +1,13 @@
+
+/etc/loki/
+│
+├── loki-config.yaml
+└── certs/
+    ├── tls.crt
+    └── tls.key
+
+sudo loki_config.yml
+----
 auth_enabled: true
 
 server:
