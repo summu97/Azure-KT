@@ -1,0 +1,65 @@
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: debug
+  grpc_server_max_concurrent_streams: 1000
+
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /home/azureuser/loki
+  storage:
+    azure:
+      account_name: ${AZURE_STORAGE_ACCOUNT_NAME}
+      account_key: ${AZURE_STORAGE_ACCOUNT_KEY}
+      container_name: ${AZURE_STORAGE_CONTAINER}
+      use_managed_identity: false
+      endpoint_suffix: blob.core.windows.net
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100
+
+limits_config:
+  ingestion_rate_strategy: global
+  enforce_metric_name: false
+
+schema_config:
+  configs:
+    - from: "2020-12-11"
+      store: tsdb
+      object_store: azure
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+storage_config:
+  azure:
+    account_name: ${AZURE_STORAGE_ACCOUNT_NAME}
+    account_key: ${AZURE_STORAGE_ACCOUNT_KEY}
+    container_name: ${AZURE_STORAGE_CONTAINER}
+    use_managed_identity: false
+    endpoint_suffix: blob.core.windows.net
+
+  tsdb_shipper:
+    active_index_directory: /home/azureuser/installations/loki/index
+    cache_location: /home/azureuser/installations/loki/index_cache
+    cache_ttl: 24h
+
+
+ruler:
+  alertmanager_url: http://localhost:9093
+============================================
+AZURE_STORAGE_ACCOUNT_NAME="lokibackendstorebucket" \
+AZURE_STORAGE_ACCOUNT_KEY="*******" \
+AZURE_STORAGE_CONTAINER="loki-backend-store" \
+nohup ./loki-linux-amd64 -config.file=loki-local-config.yaml -config.expand-env=true > loki.log 2>&1 &
