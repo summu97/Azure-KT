@@ -149,6 +149,8 @@ scrape_configs:
 ----
 
 sudo nohup ./promtail-linux-amd64 -config.file=promtail-local-config.yaml > promtail.log 2>&1 &
+sudo nohup ./promtail-linux-amd64 -config.file=promtail-local-config.yaml > promtail.log 2>&1 &
+
 ps aux | grep promtail
 
 Go to Grafana dashboard and add data source and after adding see the content in explore...
@@ -156,6 +158,8 @@ Go to Grafana dashboard and add data source and after adding see the content in 
 To stop the process:
  Step 1: Find the Process 'ps aux | grep promtail-linux-amd64'
 Step 2: Kill the Process 'sudo kill <PID>'
+Stop the current Promtail process:
+sudo pkill -f promtail-linux-amd64
 
 NOTE:
 Enable Identity in Jenkins VM and add role assignment--scope(storage)--select your storage account--give role and save
