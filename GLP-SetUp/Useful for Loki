@@ -1,0 +1,81 @@
+1. Setting up Reverse Proxy with NGINX for Authentication
+To configure NGINX as a reverse proxy in front of Loki (and enable basic authentication or any other type of authentication), follow these steps:
+
+Step 1: Install NGINX
+Make sure NGINX is installed on your system. If not, install it:
+
+Ubuntu/Debian:
+
+bash
+Copy
+Edit
+sudo apt update
+sudo apt install nginx
+CentOS/RHEL:
+
+bash
+Copy
+Edit
+sudo yum install nginx
+Step 2: Configure NGINX as Reverse Proxy
+Create or edit an NGINX configuration file for your Loki service, e.g., /etc/nginx/sites-available/loki:
+
+nginx
+Copy
+Edit
+server {
+    listen 80;
+
+    server_name loki.yourdomain.com;
+
+    # Basic Authentication
+    auth_basic "Restricted Access";
+    auth_basic_user_file /etc/nginx/.htpasswd;
+
+    location / {
+        proxy_pass http://localhost:3100;  # Pointing to Loki's HTTP port
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+Step 3: Set Up Basic Authentication
+Generate a .htpasswd file for basic authentication:
+
+bash
+Copy
+Edit
+sudo apt-get install apache2-utils  # Install htpasswd utility (if not installed)
+htpasswd -c /etc/nginx/.htpasswd <username>  # Create a user
+Step 4: Enable the NGINX Configuration
+Create a symbolic link to enable the configuration:
+
+bash
+Copy
+Edit
+sudo ln -s /etc/nginx/sites-available/loki /etc/nginx/sites-enabled/
+Test NGINX configuration for errors:
+
+bash
+Copy
+Edit
+sudo nginx -t
+Reload NGINX:
+
+bash
+Copy
+Edit
+sudo systemctl reload nginx
+Now, when accessing your Loki instance, users will need to authenticate using the username and password you set up.
+
+Step 5: (Optional) Secure with HTTPS
+For production environments, you should use HTTPS. You can use Let’s Encrypt to get a free SSL certificate:
+
+bash
+Copy
+Edit
+sudo apt-get install certbot python3-certbot-nginx
+sudo certbot --nginx -d loki.yourdomain.com
+This will automatically configure NGINX to use HTTPS with a valid SSL certificate.
+
