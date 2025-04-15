@@ -1,0 +1,57 @@
+Grafana Installation: 
+Pre-requesites:
+Port	Protocol	Purpose
+3000	TCP		Web UI & API Access
+
+System Requirements:
+Requirement 	| Recommended Value
+OS 		| Ubuntu/Debian (script uses apt)
+RAM 		| Minimum: 512MBRecommended: 1GB+
+CPU		| 1 core minimum
+Disk Space 	| 100MB+ (excluding metrics/data retention)
+Internet Access | Required for downloading packages and GPG key
+
+
+sudo vim grafana.sh
+
+#!/bin/bash
+
+set -e
+
+# Install the prerequisite packages (auto-approve)
+sudo apt-get update -y
+sudo apt-get install -y apt-transport-https software-properties-common wget gnupg
+
+# Import the GPG key (no prompt)
+sudo mkdir -p /etc/apt/keyrings/
+wget -q -O - https://apt.grafana.com/gpg.key | gpg --dearmor | sudo tee /etc/apt/keyrings/grafana.gpg > /dev/null
+
+# Add Grafana APT repository (no prompt)
+echo "deb [signed-by=/etc/apt/keyrings/grafana.gpg] https://apt.grafana.com stable main" | sudo tee -a /etc/apt/sources.list.d/grafana.list
+
+# Update packages list (auto-approve)
+sudo apt-get update -y
+
+# Install Grafana OSS latest version (auto-approve)
+sudo apt-get install -y grafana
+
+# Enable and start Grafana service
+sudo systemctl enable --now grafana-server
+
+# Confirm Grafana status
+sudo systemctl status grafana-server --no-pager
+
+### USEFUL
+# sudo /bin/systemctl daemon-reload
+# sudo /bin/systemctl enable grafana-server
+# sudo /bin/systemctl start grafana-server
+
+sh grafana.sh
+
+
+Once Grafana is up and running:
+Browse: PublicIP:3000
+Username: admin
+Password: admin
+(Admin@!~123)
+NOTE: Make sure to change password once you login to Grafana.
