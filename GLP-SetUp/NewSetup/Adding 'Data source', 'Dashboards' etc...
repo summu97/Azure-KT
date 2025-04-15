@@ -1,0 +1,5 @@
+Adding Prometheus as DataSource in Grafana:
+Browse PublicIP:3000--Click on Gear Icon--Connections--Data source--Add Data source--Prometheus--Prometheus server URL(http://PublicIP:9090)--Save&Test
+
+Adding NodeExporter Dashboard in Grafana:
+Dashboard--New--Import--ID: 1860--Select Data source(Prometheus)--Import
