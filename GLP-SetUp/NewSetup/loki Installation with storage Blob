@@ -54,7 +54,8 @@ storage_config:
     active_index_directory: /home/azureuser/installations/loki/index
     cache_location: /home/azureuser/installations/loki/index_cache
     cache_ttl: 24h
-
+compactor:
+  retention_enabled: true
 
 ruler:
   alertmanager_url: http://localhost:9093
