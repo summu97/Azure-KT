@@ -1,0 +1,48 @@
+ 1. Install Process Exporter
+# Download the latest release from the GitHub releases page: https://github.com/ncabatoff/process-exporter/releases
+wget https://github.com/ncabatoff/process-exporter/releases/download/v0.8.5/process-exporter-0.8.5.linux-amd64.tar.gz
+
+# Extract the tarball
+tar xvfz process-exporter-0.8.5.linux-amd64.tar.gz
+
+# Move to /usr/local/bin for global use
+sudo mv process-exporter-0.8.5.linux-amd64/process-exporter /usr/local/bin/
+
+
+2. Configure Process Exporter
+sudo vim process-exporter.yml
+#  Use this config to monitor all processes individually
+process_names:
+  - name: "{{.Comm}}"
+    cmdline:
+      - '.+'
+Ex:
+process_names:
+  - name: "prometheus"
+    cmdline:
+      - "prometheus"
+  - name: "node_exporter"
+    cmdline:
+      - "node_exporter"
+
+
+3. Run Process Exporter
+sudo nohup process-exporter -config.path=process-exporter.yml > process-exporter.log 2>&1 &
+
+
+NOTE: By default, Process Exporter will expose metrics on port 9256. You can access it via: http://localhost:9256/metrics
+
+
+4. Add Process Exporter as a Prometheus Target
+sudo vim /etc/prometheus/prometheus.yml
+scrape_configs:
+  - job_name: 'process_exporter'
+    static_configs:
+      - targets: ['10.0.0.5:9256']
+
+5. Restart Prometheus
+# Restart Prometheus (adjust command as per your setup)
+systemctl restart prometheus
+
+6. Verify in Prometheus
+process_exporter_running_processes
