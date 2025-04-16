@@ -1,0 +1,60 @@
+Create a Grafana Panel: In Grafana, you can create a panel that checks for the running status of these processes.
+
+Go to Grafana Dashboard.
+
+Add a new panel.
+
+Use a Prometheus query to check the status of the processes. For example, use this query:
+
+plaintext
+Copy
+Edit
+process_start_time_seconds{job="process_exporter", name="prometheus"}
+This will return the start time of the Prometheus process, and you can use this metric to determine whether the process is up.
+
+In the Display options:
+
+If the value is greater than zero, show "Up" or a green indicator.
+
+If the value is zero, show "Down" or a red indicator.
+
+You can also combine both Prometheus and Node Exporter in the same panel or separate panels.
+
+Alerting for Process Down: If you want to be alerted when a process goes down, you can set up an alert in Grafana.
+
+For example, an alert condition could be set where the metric process_start_time_seconds{job="process_exporter", name="prometheus"} equals 0.
+
+Set up the alert to notify you when this happens.
+
+Example Query for Grafana Panel:
+To show whether Prometheus is up or down, use this query:
+
+plaintext
+Copy
+Edit
+process_start_time_seconds{job="process_exporter", name="prometheus"}
+To show whether Node Exporter is up or down, use this query:
+
+plaintext
+Copy
+Edit
+process_start_time_seconds{job="process_exporter", name="node_exporter"}
+Panel Configuration:
+Visualization: Use Stat or Gauge visualization in Grafana.
+
+Thresholds: Set a threshold to visually indicate the status:
+
+Value 0 = Down (red color).
+
+Value >0 = Up (green color).
+
+Final Setup:
+Process Exporter running and exposing metrics about Prometheus and Node Exporter.
+
+Prometheus scraping the Process Exporter metrics.
+
+Grafana querying Prometheus and displaying process status using the start time of the process.
+
+Optional: Set alerts in Grafana to notify you when processes are down.
+
+Let me know if you need more help on this!
