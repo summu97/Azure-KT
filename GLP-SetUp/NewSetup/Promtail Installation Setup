@@ -112,6 +112,16 @@ scrape_configs:
           job: docker
           __path__: /var/lib/docker/containers/*/*.log
           stream: stdout
+
+  - job_name: journal
+    journal:
+      max_age: 12h
+      labels:
+        job: systemd-journal
+    relabel_configs:
+      - source_labels: ['__journal__systemd_unit']
+        target_label: 'unit'
+
 ---
 
 sudo nohup ./promtail-linux-amd64 -config.file=promtail-local-config.yaml > promtail.log 2>&1 &
