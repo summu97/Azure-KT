@@ -1,0 +1,9 @@
+To sync the changes made in on-prem servers to Storage Blob:
+Install azcopy in on-prem and execute:
+azcopy sync "/your/local/folder" "https://youraccount.blob.core.windows.net/yourcontainer?<sas-token>" --recursive
+
+Schedule the command to run automatically:
+
+On Linux: use cron
+
+On Windows: use Task Schedule
