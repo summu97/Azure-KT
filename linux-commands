@@ -18,3 +18,10 @@ Ex: 'grep "hello" file.txt'
 Installations:
 Docker: 'sudo apt install docker.io'
 Ansible:
+sudo apt update
+sudo apt install software-properties-common
+sudo add-apt-repository --yes --update ppa:ansible/ansible
+sudo apt install ansible -y
+ansible --version
+
+Ansible full setup link: https://github.com/summu97/GCP-ANSIBLE.git
