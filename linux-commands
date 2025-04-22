@@ -1,11 +1,20 @@
-Memory Usage: free -h Or cat /proc/meminfo
+Memory Usage: 'free -h' Or 'cat /proc/meminfo'
 
-CPU Usage: top Or htop
-For a quick CPU summary: mpstat
+CPU Usage: 'top' Or 'htop'
+For a quick CPU summary: 'mpstat'
 
-Disk Usage: df -h
-For per-directory size usage: du -sh /*
+Disk Usage: 'df -h'
 
-To check running processes in Linux: ps aux
-To filter by a specific process (e.g., nginx): ps aux | grep nginx
+To check running processes in Linux: 'ps aux'
+To filter by a specific process (e.g., nginx): 'ps aux | grep nginx'
 
+grep
+Which means:
+g = globally search
+/re/ = for a regular expression
+p = and print the lines
+Ex: 'grep "hello" file.txt'
+--------------------------------------------
+Installations:
+Docker: 'sudo apt install docker.io'
+Ansible:
