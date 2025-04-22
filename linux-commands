@@ -23,5 +23,11 @@ sudo apt install software-properties-common
 sudo add-apt-repository --yes --update ppa:ansible/ansible
 sudo apt install ansible -y
 ansible --version
+---
+Types of inventories in Ansible:
+1. Static-inventory: useful when the number of client Virtual Machines are less or dont change.
+2. Dynamic-inventory: useful when the number of client Virtual Machines keeps on changine i.e, new VM's get added.
+Inventory file has the information related to Client Virtual Machines.
+Like their IP's/Host names/Domain_names etc...
 
 Ansible full setup link: https://github.com/summu97/GCP-ANSIBLE.git
