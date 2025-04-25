@@ -1,0 +1,402 @@
+#!/bin/bash
+
+set -e
+
+KAFKA_VERSION="3.6.1"
+SCALA_VERSION="2.13"
+KAFKA_DIR="kafka_${SCALA_VERSION}-${KAFKA_VERSION}"
+KAFKA_URL="https://downloads.apache.org/kafka/${KAFKA_VERSION}/${KAFKA_DIR}.tgz"
+INSTALL_DIR="/opt/kafka"
+
+echo "🔧 Installing Java & dependencies..."
+sudo apt update && sudo apt install -y openjdk-11-jdk wget
+
+echo "👤 Creating 'kafka' user..."
+sudo useradd -m -s /bin/bash kafka || echo "User 'kafka' already exists"
+
+echo "📁 Downloading and setting up Kafka..."
+cd /opt
+sudo wget -q $KAFKA_URL
+sudo tar -xzf "${KAFKA_DIR}.tgz"
+sudo mv $KAFKA_DIR kafka
+sudo chown -R kafka:kafka /opt/kafka
+sudo rm "${KAFKA_DIR}.tgz"
+
+echo "📜 Creating systemd service files..."
+
+# Zookeeper systemd service
+cat <<EOF | sudo tee /etc/systemd/system/zookeeper.service > /dev/null
+[Unit]
+Description=Apache Zookeeper Server
+After=network.target
+
+[Service]
+Type=simple
+User=kafka
+ExecStart=/opt/kafka/bin/zookeeper-server-start.sh /opt/kafka/config/zookeeper.properties
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# Kafka systemd service
+cat <<EOF | sudo tee /etc/systemd/system/kafka.service > /dev/null
+[Unit]
+Description=Apache Kafka Server
+Requires=zookeeper.service
+After=zookeeper.service
+
+[Service]
+Type=simple
+User=kafka
+ExecStart=/opt/kafka/bin/kafka-server-start.sh /opt/kafka/config/server.properties
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+echo "🔁 Reloading and enabling services..."
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+sudo systemctl enable zookeeper
+sudo systemctl enable kafka
+
+echo "🚀 Starting services..."
+sudo systemctl start zookeeper
+sleep 5
+sudo systemctl start kafka
+
+echo "✅ Kafka and Zookeeper are now installed and running as systemd services!"
+echo ""
+echo "🔍 To check status:"
+echo "  sudo systemctl status kafka"
+echo "  sudo systemctl status zookeeper"
+echo ""
+echo "📦 Kafka is installed at: $INSTALL_DIR"
+
+
+
+
+chmod +x iinstall_kafka_prod.sh
+
+./install_kafka_prod.sh
+-------------------------------------------
+#!/bin/bash
+
+set -e
+
+# === CONFIGURABLE ===
+KAFKA_VERSION="3.6.1"
+SCALA_VERSION="2.13"
+KAFKA_DIR="kafka_${SCALA_VERSION}-${KAFKA_VERSION}"
+KAFKA_URL="https://downloads.apache.org/kafka/${KAFKA_VERSION}/${KAFKA_DIR}.tgz"
+INSTALL_DIR="/opt/kafka"
+STORAGE_DIR="/tmp/kafka-logs"
+NODE_ID=1
+HOST_IP=$(hostname -I | awk '{print $1}')  # Picks first IP
+
+echo "🔧 Installing Java & dependencies..."
+sudo apt update && sudo apt install -y openjdk-11-jdk wget
+
+echo "👤 Creating 'kafka' user..."
+sudo useradd -m -s /bin/bash kafka || echo "User 'kafka' already exists"
+
+echo "📁 Downloading and setting up Kafka (KRaft mode)..."
+cd /opt
+sudo wget -q $KAFKA_URL
+sudo tar -xzf "${KAFKA_DIR}.tgz"
+sudo mv $KAFKA_DIR kafka
+sudo chown -R kafka:kafka $INSTALL_DIR
+sudo rm "${KAFKA_DIR}.tgz"
+
+echo "📜 Creating KRaft config..."
+sudo mkdir -p $INSTALL_DIR/config/kraft
+sudo tee $INSTALL_DIR/config/kraft/server.properties > /dev/null <<EOF
+process.roles=broker,controller
+node.id=${NODE_ID}
+controller.quorum.voters=${NODE_ID}@${HOST_IP}:9093
+listeners=PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+advertised.listeners=PLAINTEXT://${HOST_IP}:9092
+controller.listener.names=CONTROLLER
+log.dirs=${STORAGE_DIR}
+num.network.threads=3
+num.io.threads=8
+socket.send.buffer.bytes=102400
+socket.receive.buffer.bytes=102400
+socket.request.max.bytes=104857600
+log.retention.hours=168
+log.segment.bytes=1073741824
+log.retention.check.interval.ms=300000
+group.initial.rebalance.delay.ms=0
+EOF
+
+echo "🔐 Formatting storage with cluster ID..."
+sudo -u kafka $INSTALL_DIR/bin/kafka-storage.sh format -t $($INSTALL_DIR/bin/kafka-storage.sh random-uuid) -c $INSTALL_DIR/config/kraft/server.properties
+
+echo "🛠️ Creating systemd service for Kafka in KRaft mode..."
+sudo tee /etc/systemd/system/kafka.service > /dev/null <<EOF
+[Unit]
+Description=Apache Kafka (KRaft mode)
+After=network.target
+
+[Service]
+Type=simple
+User=kafka
+ExecStart=$INSTALL_DIR/bin/kafka-server-start.sh $INSTALL_DIR/config/kraft/server.properties
+Restart=on-failure
+LimitNOFILE=100000
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+echo "🔁 Reloading and enabling Kafka service..."
+sudo systemctl daemon-reexec
+sudo systemctl daemon-reload
+sudo systemctl enable kafka
+
+echo "🚀 Starting Kafka..."
+sudo systemctl start kafka
+
+echo "✅ Kafka (KRaft mode) is now installed and running as a systemd service!"
+echo ""
+echo "🔍 To check Kafka status:"
+echo "  sudo systemctl status kafka"
+echo ""
+echo "📦 Kafka is installed at: $INSTALL_DIR"
+echo "🌐 Broker accessible at: PLAINTEXT://${HOST_IP}:9092"
+------------------------------------
+🚀 Kafka in Multi-Node KRaft Mode with SSL & SASL Authentication
+This includes:
+
+✅ Multi-node KRaft setup
+
+🔐 SSL configuration
+
+🔒 SASL (SCRAM) authentication
+
+⚙️ Systemd service for Kafka
+
+🧩 External advertised listener setup
+
+📜 Master Automation Script (Run on Each Node):
+#!/bin/bash
+set -e
+
+# === CONFIGURATION ===
+KAFKA_VERSION="3.6.1"
+SCALA_VERSION="2.13"
+KAFKA_DIR="kafka_${SCALA_VERSION}-${KAFKA_VERSION}"
+KAFKA_URL="https://downloads.apache.org/kafka/${KAFKA_VERSION}/${KAFKA_DIR}.tgz"
+INSTALL_DIR="/opt/kafka"
+STORAGE_DIR="/tmp/kafka-logs"
+KAFKA_USER="kafka"
+HOST_IP=$(hostname -I | awk '{print $1}')
+NODE_ID=$1  # e.g. pass 1, 2, 3 when executing the script
+
+# Controller quorum - update with actual IPs and node IDs
+CONTROLLER_QUORUM="1@192.168.1.10:9093,2@192.168.1.11:9093,3@192.168.1.12:9093"
+
+# === SSL CONFIG ===
+SSL_DIR="/etc/kafka/ssl"
+KEYSTORE_PASSWORD="kafkastorepass"
+TRUSTSTORE_PASSWORD="truststorepass"
+
+# === JAVA & DEPENDENCIES ===
+echo "📦 Installing Java & tools..."
+sudo apt update && sudo apt install -y openjdk-11-jdk wget openssl
+
+echo "👤 Creating Kafka user..."
+sudo useradd -m -s /bin/bash $KAFKA_USER || echo "Kafka user already exists"
+
+# === DOWNLOAD & INSTALL KAFKA ===
+echo "📥 Downloading Kafka $KAFKA_VERSION..."
+cd /opt
+sudo wget -q $KAFKA_URL
+sudo tar -xzf "${KAFKA_DIR}.tgz"
+sudo mv $KAFKA_DIR kafka
+sudo chown -R $KAFKA_USER:$KAFKA_USER $INSTALL_DIR
+sudo rm "${KAFKA_DIR}.tgz"
+
+# === GENERATE SSL CERTS ===
+echo "🔐 Creating SSL certificates..."
+sudo mkdir -p $SSL_DIR
+cd $SSL_DIR
+
+# Create CA
+openssl req -new -x509 -keyout ca-key -out ca-cert -days 365 -nodes -subj "/CN=KafkaCA"
+
+# Create Kafka keystore
+keytool -genkey -alias kafka-${HOST_IP} -keyalg RSA -keystore kafka.keystore.jks \
+  -dname "CN=${HOST_IP}" -storepass $KEYSTORE_PASSWORD -keypass $KEYSTORE_PASSWORD -validity 365
+
+# Generate certificate signing request
+keytool -keystore kafka.keystore.jks -alias kafka-${HOST_IP} -certreq -file cert-file \
+  -storepass $KEYSTORE_PASSWORD
+
+# Sign with CA
+openssl x509 -req -CA ca-cert -CAkey ca-key -in cert-file -out cert-signed \
+  -days 365 -CAcreateserial -sha256
+
+# Import CA and signed cert to keystore
+keytool -keystore kafka.keystore.jks -alias CARoot -import -file ca-cert -noprompt -storepass $KEYSTORE_PASSWORD
+keytool -keystore kafka.keystore.jks -alias kafka-${HOST_IP} -import -file cert-signed -storepass $KEYSTORE_PASSWORD
+
+# Create truststore
+keytool -keystore kafka.truststore.jks -alias CARoot -import -file ca-cert -noprompt -storepass $TRUSTSTORE_PASSWORD
+
+sudo chown -R $KAFKA_USER:$KAFKA_USER $SSL_DIR
+
+# === GENERATE SCRAM USERS ===
+# These users will be passed later when Kafka is running
+
+# === KRaft CONFIG ===
+echo "⚙️ Setting up KRaft config..."
+sudo mkdir -p $INSTALL_DIR/config/kraft
+
+sudo tee $INSTALL_DIR/config/kraft/server.properties > /dev/null <<EOF
+process.roles=broker,controller
+node.id=${NODE_ID}
+controller.quorum.voters=${CONTROLLER_QUORUM}
+controller.listener.names=CONTROLLER
+listeners=SASL_SSL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+advertised.listeners=SASL_SSL://${HOST_IP}:9092
+listener.security.protocol.map=SASL_SSL:SASL_SSL,CONTROLLER:PLAINTEXT
+inter.broker.listener.name=SASL_SSL
+
+log.dirs=${STORAGE_DIR}
+
+ssl.keystore.location=${SSL_DIR}/kafka.keystore.jks
+ssl.keystore.password=${KEYSTORE_PASSWORD}
+ssl.truststore.location=${SSL_DIR}/kafka.truststore.jks
+ssl.truststore.password=${TRUSTSTORE_PASSWORD}
+ssl.client.auth=required
+
+security.inter.broker.protocol=SASL_SSL
+sasl.enabled.mechanisms=SCRAM-SHA-512
+sasl.mechanism.inter.broker.protocol=SCRAM-SHA-512
+
+authorizer.class.name=kafka.security.authorizer.AclAuthorizer
+super.users=User:admin
+
+EOF
+
+# === FORMAT STORAGE ===
+echo "📦 Formatting KRaft metadata..."
+sudo -u $KAFKA_USER $INSTALL_DIR/bin/kafka-storage.sh format -t $($INSTALL_DIR/bin/kafka-storage.sh random-uuid) -c $INSTALL_DIR/config/kraft/server.properties
+
+# === SYSTEMD SERVICE ===
+echo "🛠️ Creating Kafka systemd service..."
+sudo tee /etc/systemd/system/kafka.service > /dev/null <<EOF
+[Unit]
+Description=Apache Kafka (KRaft)
+After=network.target
+
+[Service]
+Type=simple
+User=$KAFKA_USER
+ExecStart=$INSTALL_DIR/bin/kafka-server-start.sh $INSTALL_DIR/config/kraft/server.properties
+Restart=on-failure
+LimitNOFILE=100000
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# === START SERVICE ===
+echo "🚀 Starting Kafka service..."
+sudo systemctl daemon-reload
+sudo systemctl enable kafka
+sudo systemctl start kafka
+
+echo "✅ Kafka in KRaft mode is installed & running with SSL + SASL!"
+echo "🌐 Broker available at SASL_SSL://${HOST_IP}:9092"
+
+
+
+👥 Add SCRAM users after Kafka is running:
+---------------------------------------
+🛠️ Kafka KRaft Dev Mode Setup Script (Ubuntu):
+install-kafka-kraft-dev.sh
+
+#!/bin/bash
+set -e
+
+KAFKA_VERSION="3.6.1"
+SCALA_VERSION="2.13"
+KAFKA_DIR="kafka_${SCALA_VERSION}-${KAFKA_VERSION}"
+KAFKA_URL="https://downloads.apache.org/kafka/${KAFKA_VERSION}/${KAFKA_DIR}.tgz"
+INSTALL_DIR="/opt/kafka"
+KAFKA_USER="kafka"
+LOG_DIR="/tmp/kafka-logs"
+
+echo "📦 Installing Java..."
+sudo apt update && sudo apt install -y openjdk-11-jdk wget
+
+echo "👤 Creating kafka user (if not exists)..."
+sudo id -u $KAFKA_USER &>/dev/null || sudo useradd -m -s /bin/bash $KAFKA_USER
+
+echo "📥 Downloading Kafka $KAFKA_VERSION..."
+cd /opt
+sudo wget -q $KAFKA_URL
+sudo tar -xzf "${KAFKA_DIR}.tgz"
+sudo mv $KAFKA_DIR kafka
+sudo chown -R $KAFKA_USER:$KAFKA_USER /opt/kafka
+sudo rm "${KAFKA_DIR}.tgz"
+
+echo "⚙️ Creating KRaft config..."
+sudo tee $INSTALL_DIR/config/kraft/server.properties > /dev/null <<EOF
+process.roles=broker,controller
+node.id=1
+controller.quorum.voters=1@localhost:9093
+controller.listener.names=CONTROLLER
+listeners=PLAINTEXT://:9092,CONTROLLER://:9093
+inter.broker.listener.name=PLAINTEXT
+advertised.listeners=PLAINTEXT://localhost:9092
+log.dirs=$LOG_DIR
+EOF
+
+echo "🧹 Cleaning old logs..."
+sudo rm -rf $LOG_DIR
+sudo mkdir -p $LOG_DIR
+sudo chown -R $KAFKA_USER:$KAFKA_USER $LOG_DIR
+
+echo "🆕 Formatting KRaft metadata..."
+sudo -u $KAFKA_USER $INSTALL_DIR/bin/kafka-storage.sh format -t $(uuidgen) -c $INSTALL_DIR/config/kraft/server.properties --ignore-formatted
+
+echo "🛠️ Creating systemd service..."
+sudo tee /etc/systemd/system/kafka.service > /dev/null <<EOF
+[Unit]
+Description=Apache Kafka (KRaft Dev)
+After=network.target
+
+[Service]
+Type=simple
+User=$KAFKA_USER
+ExecStart=$INSTALL_DIR/bin/kafka-server-start.sh $INSTALL_DIR/config/kraft/server.properties
+Restart=on-failure
+LimitNOFILE=100000
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+echo "🚀 Starting Kafka service..."
+sudo systemctl daemon-reload
+sudo systemctl enable kafka
+sudo systemctl start kafka
+
+echo "✅ Kafka (KRaft mode) is running in DEV mode!"
+echo "🔗 Connect via: PLAINTEXT://localhost:9092"
+
+
+
+🧪 Test your Kafka:
+# Create a test topic
+/opt/kafka/bin/kafka-topics.sh --create --topic test-topic --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+
+# List topics
+/opt/kafka/bin/kafka-topics.sh --list --bootstrap-server localhost:9092
+
