@@ -144,7 +144,7 @@ sudo systemctl status kafka-broker1
 -------------------
 source ~/.bashrc
 
-kafka-topics.sh --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1 --topic first-topic --create
+kafka-topics.sh --bootstrap-server localhost:9092 --partitions 3 --replication-factor 3 --topic first-topic --create
 -------------------
 🔍 View logs for each broker:
 sudo journalctl -u kafka-broker1 -f
