@@ -1,0 +1,92 @@
+wget https://github.com/grafana/loki/releases/download/v2.9.13/promtail-linux-amd64.zip
+
+unzip promtail-linux-amd64.zip
+
+wget https://raw.githubusercontent.com/grafana/loki/main/clients/cmd/promtail/promtail-local-config.yaml
+(run these steps on all the servers where you want to install promtail)
+
+sudo vim promtail-local-config.yaml
+
+---
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://Jenkins-BuildServer:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: system
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: varlogs
+          host: <host_name>         # <- Add unique server name here
+          __path__: /var/log/*log
+          stream: stdout
+
+  - job_name: docker-logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: docker
+          host: <host_name>         # <- Add same host label here
+          __path__: /var/lib/docker/containers/*/*.log
+          stream: stdout
+
+  - job_name: journal
+    journal:
+      max_age: 12h
+      labels:
+        job: systemd-journal
+        host: <host_name>          # <- Add it here too
+    relabel_configs:
+      - source_labels: ['__journal__systemd_unit']
+        target_label: 'unit'
+
+
+---
+
+sudo nohup ./promtail-linux-amd64 -config.file=promtail-local-config.yaml > promtail.log 2>&1 &
+
+
+_____________________________________________________
+
+NOTE: FOR REDHAT-SERVERS: promtail installation is different from another flavors:
+
+try below commands:
+wget https://github.com/grafana/loki/releases/download/v2.6.1/promtail-linux-amd64.zip
+unzip promtail-linux-amd64.zip
+chmod +x promtail-linux-amd64
+
+sudo nohup ./promtail-linux-amd64 -config.file=promtail-local-config.yaml > promtail.log 2>&1 &
+
+Follow below steps to allow ports and firewalls:
+Install firewalld:
+sudo yum install firewalld -y
+sudo systemctl enable firewalld
+sudo systemctl start firewalld
+
+To ALLOW port 9100/tcp:
+sudo firewall-cmd --add-port=3100/tcp --permanent  ..9256
+
+sudo firewall-cmd --reload
+
+To REMOVE (Not Allow) port 3100/tcp:
+sudo firewall-cmd --remove-port=3	100/tcp --permanent
+sudo firewall-cmd --reload
+
+Verify:
+sudo firewall-cmd --list-ports
+
+
+USEFUL:
+ps aux | grep promtail
+sudo kill
+
+sudo firewall-cmd --add-port=8080/tcp --permanent
