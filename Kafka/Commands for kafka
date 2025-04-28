@@ -1,0 +1,91 @@
+📜 Commands with kafka-topics.sh
+# Create a topic
+kafka-topics.sh --create --topic my_topic --bootstrap-server localhost:9092 --partitions 3 --replication-factor 1
+
+# List all topics
+kafka-topics.sh --list --bootstrap-server localhost:9092
+
+# Describe a topic
+kafka-topics.sh --describe --topic my_topic --bootstrap-server localhost:9092
+
+# Delete a topic
+kafka-topics.sh --delete --topic my_topic --bootstrap-server localhost:9092
+
+📤 How Kafka Producer sends messages:
+Producer connects to Kafka cluster (through bootstrap server).
+Producer API lets you send a message to a topic.
+Kafka internally decides (based on key or round-robin) which partition inside the topic to put the message in.
+Kafka acknowledges back to producer (depending on acks setting).
+Message is written and stored inside the partition on the broker.
+
+✅ Example: In Python (kafka-python)
+from kafka import KafkaProducer
+
+producer = KafkaProducer(bootstrap_servers='localhost:9092')
+
+producer.send('my_topic', b'Hello, this is my first message!')
+producer.flush()
+
+
+📥 How Kafka Consumer receives messages:
+Consumer connects to Kafka cluster (bootstrap server).
+Consumer subscribes to a topic (or multiple topics).
+Kafka assigns partitions to the consumer (if using consumer groups).
+Consumer polls for new messages (pulls, not push).
+Messages are fetched from the broker partition to the consumer.
+After processing, consumer commits offset (marks where it reached).
+
+
+
+✅ Example: In Python (kafka-python)
+from kafka import KafkaConsumer
+
+consumer = KafkaConsumer(
+    'my_topic',
+    bootstrap_servers='localhost:9092',
+    auto_offset_reset='earliest',  # Start from beginning
+    group_id='my_consumer_group'
+)
+
+for message in consumer:
+    print(f"Received message: {message.value.decode()}")
+
+
+kafka-consumer-groups.sh commands 
+# List all consumer groups
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list
+
+# Describe a specific consumer group (shows members, lag, partitions, etc.)
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group my_consumer_group
+
+# Delete a consumer group
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 --delete --group my_consumer_group
+
+# Reset offsets to earliest for a specific consumer group and topic
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group my_consumer_group --topic my_topic --reset-offsets --to-earliest --execute
+
+
+kafka-consumer-groups.sh
+# List all consumer groups
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 --list
+
+# Describe a specific consumer group (see members, lag, partitions assigned)
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group my_consumer_group
+
+# Delete a specific consumer group
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 --delete --group my_consumer_group
+
+# Reset offsets to the earliest for a specific consumer group and topic
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group my_consumer_group --topic my_topic --reset-offsets --to-earliest --execute
+
+# Reset offsets to the latest for a specific consumer group and topic
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group my_consumer_group --topic my_topic --reset-offsets --to-latest --execute
+
+# Reset offsets to a specific offset number
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group my_consumer_group --topic my_topic --reset-offsets --to-offset 15 --execute
+
+# Reset offsets to a specific timestamp (messages after given timestamp)
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group my_consumer_group --topic my_topic --reset-offsets --to-datetime 2024-04-27T10:00:00.000 --execute
+
+# Preview the offset reset (dry run without applying changes)
+kafka-consumer-groups.sh --bootstrap-server localhost:9092 --group my_consumer_group --topic my_topic --reset-offsets --to-earliest --dry-run
