@@ -58,24 +58,30 @@ for Redhat servers kafka and redis:
 
 process_names:
   - name: "zookeeper"
+    exe:
+      - "java"
     cmdline:
-      - 'zookeeper-server-start.sh'
- 
+      - "QuorumPeerMain"
+
   - name: "kafka"
+    exe:
+      - "java"
     cmdline:
-      - 'kafka-server-start.sh'
- 
+      - "kafka.Kafka"
+
   - name: "redis"
     cmdline:
-      - 'redis-server'
+      - "redis-server"
 
   - name: "promtail"
-    cmdline:
-      - './promtail-linux-amd64'	  
+    exe:
+      - "promtail-linux-amd64"
 
   - name: "node_exporter"
-    cmdline:
-      - '/usr/local/bin/node_exporter'	  
+    exe:
+      - "node_exporter"
+
+ 	  
 	  
 
 sudo nohup ./process-exporter -config.path=/home/adminuser/process-exporter.yml > ../process-exporter.log 2>&1 &	
