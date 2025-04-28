@@ -1,0 +1,130 @@
+ 1. Install Process Exporter
+# Download the latest release from the GitHub releases page: https://github.com/ncabatoff/process-exporter/releases
+wget https://github.com/ncabatoff/process-exporter/releases/download/v0.8.5/process-exporter-0.8.5.linux-amd64.tar.gz
+
+
+********************************************************************************************************************
+for Redhat:
+wget https://github.com/ncabatoff/process-exporter/releases/download/v0.7.10/process-exporter-0.7.10.linux-amd64.tar.gz
+
+# Extract the tarball
+tar xvfz process-exporter-0.7.10.linux-amd64.tar.gz
+
+cd  process-exporter-0.7.10.linux-amd64
+sudo chmod +x process-exporter
+ls -al
+#place you config file:
+sudo nohup ./process-exporter -config.path=/home/adminuser/process-exporter.yml > ../process-exporter.log 2>&1 &	
+
+ps aux | grep process-exporter
+********************************************************************************************************************
+
+Process to be Monitor: sonar,jenkins,loki,promtail,grafana,docker,kafka,redis,zookeeper,cronjobs
+********************************************************************************************************************
+2. Configure Process Exporter
+sudo vim process-exporter.yml
+
+for Jenkins-Server :
+process_names:
+  - name: "jenkins"
+    cmdline:
+      - '/usr/bin/java.*jenkins.war'
+ 
+  - name: "grafana"
+    cmdline:
+      - '/usr/share/grafana/bin/grafana'
+ 
+  - name: "node_exporter"
+    cmdline:
+      - '/usr/local/bin/node_exporter'
+ 
+  - name: "prometheus"
+    cmdline:
+      - '/usr/local/bin/prometheus'
+ 
+  - name: "promtail"
+    cmdline:
+      - './promtail-linux-amd64'
+ 
+  - name: "loki"
+    cmdline:
+      - './loki-linux-amd64'
+ 
+  - name: "sonarqube"
+    cmdline:
+      - '/usr/lib/jvm/java-17-openjdk-amd64/bin/java.*sonar'
+********************************************************************************************************************
+for Redhat servers kafka and redis:
+
+process_names:
+  - name: "zookeeper"
+    cmdline:
+      - 'zookeeper-server-start.sh'
+ 
+  - name: "kafka"
+    cmdline:
+      - 'kafka-server-start.sh'
+ 
+  - name: "redis"
+    cmdline:
+      - 'redis-server'
+
+  - name: "promtail"
+    cmdline:
+      - './promtail-linux-amd64'	  
+
+  - name: "node_exporter"
+    cmdline:
+      - '/usr/local/bin/node_exporter'	  
+	  
+
+sudo nohup ./process-exporter -config.path=/home/adminuser/process-exporter.yml > ../process-exporter.log 2>&1 &	
+********************************************************************************************************************
+2. Configure Process Exporter
+sudo vim process-exporter.yml
+#  Use this config to monitor all processes individually
+process_names:
+  - name: "{{.Comm}}"
+    cmdline:
+      - '.+'
+Ex:
+process_names:
+  - name: "prometheus"
+    cmdline:
+      - "prometheus"
+  - name: "node_exporter"
+    cmdline:
+      - "node_exporter"
+
+
+3. Run Process Exporter
+sudo nohup process-exporter -config.path=process-exporter.yml > process-exporter.log 2>&1 &
+
+
+NOTE: By default, Process Exporter will expose metrics on port 9256. You can access it via: http://localhost:9256/metrics
+
+
+4. Add Process Exporter as a Prometheus Target
+sudo vim /etc/prometheus/prometheus.yml
+ add below lines to the existing prometheus.yml file
+
+  - job_name: 'CODA-PROCESS-EXPORTER'
+    scrape_interval: 15s
+    scrape_timeout: 13s
+    static_configs:
+      - targets:
+          - 'Matching-Service:9256'
+          - 'Matching-Service-QA-Backup:9256'
+          - 'RedhatServerUAT:9256'
+          - 'RHELDevQa:9256'
+          - 'Jenkins-BuildServer:9256'
+
+
+5. Restart Prometheus
+# Restart Prometheus (adjust command as per your setup)
+systemctl restart prometheus
+
+6. Verify in Prometheus
+process_exporter_running_processes
+
+Dashboard Id's: 22161
