@@ -31,3 +31,68 @@ Inventory file has the information related to Client Virtual Machines.
 Like their IP's/Host names/Domain_names etc...
 
 Ansible full setup link: https://github.com/summu97/GCP-ANSIBLE.git
+=====================================================================================
+✅ Sample .gitlab-ci.yml Pipeline (Basic Equivalent)
+------------------------------------------
+stages:
+  - checkout
+  - build
+  - test
+  - docker_build
+  - push_artifact
+  - deploy
+
+# Define global variables
+variables:
+  DOCKER_IMAGE: registry.example.com/your-app
+  DOCKER_TAG: $CI_COMMIT_SHORT_SHA
+  ARTIFACTORY_URL: https://your-artifactory.com/artifactory
+  ARTIFACTORY_REPO: your-docker-repo
+
+# Checkout is implicit in GitLab, but you can add a job if needed
+checkout_code:
+  stage: checkout
+  script:
+    - echo "Code is automatically checked out in GitLab CI"
+
+build_app:
+  stage: build
+  script:
+    - ./gradlew build  # or mvn clean package, npm install, etc.
+
+unit_test:
+  stage: test
+  script:
+    - ./gradlew test  # or mvn test, npm test, etc.
+  artifacts:
+    when: always
+    reports:
+      junit: build/test-results/test/*.xml
+
+docker_build:
+  stage: docker_build
+  script:
+    - docker build -t $DOCKER_IMAGE:$DOCKER_TAG .
+  only:
+    - main
+
+push_artifact:
+  stage: push_artifact
+  script:
+    - echo "$CI_JOB_TOKEN" | docker login -u gitlab-ci-token --password-stdin $CI_REGISTRY
+    - docker tag $DOCKER_IMAGE:$DOCKER_TAG $CI_REGISTRY_IMAGE:$DOCKER_TAG
+    - docker push $CI_REGISTRY_IMAGE:$DOCKER_TAG
+  only:
+    - main
+
+docker_deploy:
+  stage: deploy
+  script:
+    - ./deploy.sh $CI_REGISTRY_IMAGE:$DOCKER_TAG  # your custom deployment logic
+  only:
+    - main
+------------------------------------------
+🔐 Security Notes
+Use CI/CD variables to store sensitive values like credentials or deploy secrets.
+
+Replace deploy.sh with your existing deployment logic (e.g., kubectl apply, docker service update, etc.).
