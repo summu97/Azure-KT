@@ -1,0 +1,34 @@
+Managed Identity assigned to your AKS node pool to access Azure Key Vault.
+🛠️ Setup Guide: Using Node Pool’s System-Assigned Managed Identity
+Step 1: Ensure your AKS cluster has system-assigned identity
+az aks show --resource-group <rg> --name <aks-name> --query identity
+
+If not enabled, enable it:
+az aks update \
+  --name <aks-name> \
+  --resource-group <rg> \
+  --enable-managed-identity
+
+Step 2: Get the Object ID of the Node Identity
+az aks show \
+  --resource-group <rg> \
+  --name <aks-name> \
+  --query identityProfile.kubeletidentity.objectId \
+  --output tsv
+
+Step 3: Grant Access to Key Vault
+Assign Key Vault permissions (e.g., get/list secrets):
+az keyvault set-policy \
+  --name <keyvault-name> \
+  --object-id <identity-object-id> \
+  --secret-permissions get list
+
+Step 4: In Your Code, Use DefaultAzureCredential()
+In Python, Java, Node.js, etc., just use:
+
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
+
+credential = DefaultAzureCredential()
+client = SecretClient(vault_url="https://<your-keyvault-name>.vault.azure.net", credential=credential)
+secret = client.get_secret("sql-credentials")
