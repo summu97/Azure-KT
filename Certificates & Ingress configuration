@@ -128,76 +128,136 @@ spec:
 
 ******************************************************************************************************************************************
 pipeline {
+
     agent any
-
+ 
     options {
+
         // Keep builds from the last 60 days
+
         buildDiscarder(logRotator(daysToKeepStr: '60', numToKeepStr: ''))
-    }
 
+    }
+ 
     environment {
+
         IMAGE_TAG = "prod-${BUILD_NUMBER}"
+
         ACR_URL = "codaprodacr.azurecr.io"
+
         ACR_IMAGE = "${ACR_URL}/codaui:${IMAGE_TAG}"
-    }
 
+		USERNAME = credentials('ACRUSERNAME')  // Give secret name that you put in your keyvault
+
+        PASSWD = credentials('ACRPASSWD')
+ 
+    }
+ 
+ 
     stages {
+
         stage('Checkout') {
+
             steps {
+
                 cleanWs()
+
                 git branch: 'CODAUIPROD', 
+
                     credentialsId: 'd4f3c5de-8b5c-46b2-92ba-4e17042170fe', 
+
                     url: 'https://vbboya@bitbucket.org/asaiprdf/codaui.git'
-            }
-        }
 
+            }
+
+        }
+ 
         stage('Install Dependencies') {
+
             steps {
+
                 sh 'git checkout CODAUIPROD'
+
                 sh 'npm install --legacy-peer-deps'
+
                 sh 'npm install env-cmd --force'
-            }
-        }
 
+            }
+
+        }
+ 
         stage('Build') {
-            steps {
-                sh 'npm run build:PROD'
-            }
-        }
 
+            steps {
+
+                sh 'npm run build:stg'
+
+            }
+
+        }
+ 
         stage('Build the Docker Image') {
+
             steps {
+
                 script {
+
                     sh "sed -i 's/ENVIRONMENT-BUILD_NUMBER/${IMAGE_TAG}/' codaui-prod-deployment.yml"
-                    sh "sudo docker image build -f Docker/PROD/Dockerfile -t ${ACR_IMAGE} ."
-                }
-            }
-        }
 
+                    sh "docker image build -f Docker/PROD/Dockerfile -t ${ACR_IMAGE} ."
+
+                }
+
+            }
+
+        }
+ 
         stage('Push the Docker Image to ACR') {
-            steps {
-                sh 'echo "$ACRPASSWD" | docker login -u "$ACRUSERNAME" --password-stdin codaregistry.azurecr.io'
-                sh "sudo docker image push ${ACR_IMAGE}"
-            }
-        }
 
+            steps {
+
+                sh 'echo "$PASSWD" | docker login -u "$USERNAME" --password-stdin ${ACR_URL}'
+
+                sh "docker image push ${ACR_IMAGE}"
+
+            }
+
+        }
+ 
         stage('Deploy to AKS') {
+
             steps {
+
                 script {
+
                     sh 'az login --identity'
+
                     sh 'az aks get-credentials --resource-group CODA-PROD-RG --name CODA-PROD-AKS-Cluster --overwrite-existing'
+
                     sh 'kubectl apply -f codaui-prod-deployment.yml'
+
                     sleep time: 30, unit: 'SECONDS'
+
                 }
+
             }
+
+        }
+ 
+        stage("Clean Docker and Workspace") {
+
+            steps {
+
+                sh 'docker system prune --all --volumes -f'
+
+                cleanWs()
+
+            }
+
         }
 
-        stage("Clean Docker and Workspace") {
-            steps {
-                sh 'sudo docker system prune --all --volumes -f'
-                cleanWs()
-            }
-        }
     }
+
 }
 
+ 
