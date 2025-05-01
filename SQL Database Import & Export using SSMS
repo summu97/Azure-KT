@@ -1,0 +1,6 @@
+Taking a point-in-time backup of an Azure SQL Database using SQL Server Management Studio (SSMS):
+Right-click on the database you want to back up.
+Open SSMS: > Connect to Azure SQL Server > Expand the "Databases" node to see your database > Right click on it > Select "Tasks" > "Export Data-tier Application" > Next > Select local path location to save backup file > Continue
+
+Importing backup of an Azure SQL Database using SQL Server Management Studio (SSMS):
+Open SSMS: > Connect to Azure SQL Server > Expand the "Databases" node to see your database > Right click on it > Select "Tasks" > "Import Data-tier Application" > Next > Select local path location to save backup file > Continue
