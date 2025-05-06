@@ -1,9 +1,9 @@
 sudo vim multi-broker-kafka.sh
 -------------------
 #!/bin/bash
-
+ 
 set -e
-
+ 
 # === CONFIGURABLE ===
 KAFKA_VERSION="3.8.1"
 SCALA_VERSION="2.12"
@@ -13,15 +13,15 @@ INSTALL_DIR="/opt/kafka"
 STORAGE_BASE="/home/kafkaadmin/kafka-data"
 USER_PATH="/home/kafkaadmin"
 EXTERNAL_IP="13.82.216.160"  # Update with your external IP
-LISTENER_IP="10.1.2.3"       # IP address for listeners (internal)
-BROKER_COUNT=${BROKER_COUNT:-3}  # Default to 3 brokers if not set
-
+LISTENER_IP="localhost"      # Localhost for internal listeners
+BROKER_COUNT=${BROKER_COUNT:-3}
+ 
 echo "🔧 Installing Java & dependencies..."
 sudo dnf install -y java-11-openjdk wget tar || sudo yum install -y java-11-openjdk wget tar
-
+ 
 echo "👤 Creating 'kafka' user..."
 sudo useradd -m -s /bin/bash kafka || echo "User 'kafka' already exists"
-
+ 
 echo "📁 Downloading and setting up Kafka (KRaft mode)..."
 cd /opt
 sudo wget -q $KAFKA_URL
@@ -29,7 +29,7 @@ sudo tar -xzf "${KAFKA_DIR}.tgz"
 sudo mv $KAFKA_DIR kafka
 sudo chown -R kafka:kafka $INSTALL_DIR
 sudo rm "${KAFKA_DIR}.tgz"
-
+ 
 echo "📁 Preparing storage directories..."
 for i in $(seq 1 $BROKER_COUNT); do
     DIR="${STORAGE_BASE}/broker$i"
@@ -37,26 +37,25 @@ for i in $(seq 1 $BROKER_COUNT); do
     sudo chown -R kafka:kafka "$DIR"
 done
 sudo chmod o+x $USER_PATH
-
+ 
 echo "📜 Creating configs for each broker..."
 for i in $(seq 1 $BROKER_COUNT); do
-    PORT=$((9090 + i*2))          # 9092, 9094, 9096, ...
-    CTRL_PORT=$((9091 + i*2))     # 9093, 9095, 9097, ...
+    PORT=$((9090 + i*2))
+    CTRL_PORT=$((9091 + i*2))
     LOG_DIR="${STORAGE_BASE}/broker$i"
     CONF_DIR="$INSTALL_DIR/config/kraft$i"
     sudo mkdir -p "$CONF_DIR"
-
-    # Correctly create the controller quorum voters
+ 
     VOTERS=""
     for j in $(seq 1 $BROKER_COUNT); do
         PEER_CTRL_PORT=$((9091 + j*2))
         if [ -n "$VOTERS" ]; then
-            VOTERS="${VOTERS},${j}@${EXTERNAL_IP}:${PEER_CTRL_PORT}"
+            VOTERS="${VOTERS},${j}@localhost:${PEER_CTRL_PORT}"
         else
-            VOTERS="${j}@${EXTERNAL_IP}:${PEER_CTRL_PORT}"
+            VOTERS="${j}@localhost:${PEER_CTRL_PORT}"
         fi
     done
-
+ 
     sudo tee "$CONF_DIR/server.properties" > /dev/null <<EOF
 process.roles=broker,controller
 node.id=$i
@@ -76,11 +75,11 @@ log.retention.check.interval.ms=300000
 group.initial.rebalance.delay.ms=0
 EOF
 done
-
+ 
 echo "🔐 Formatting broker 1 to generate cluster ID..."
 CLUSTER_ID=$($INSTALL_DIR/bin/kafka-storage.sh random-uuid)
 sudo -u kafka $INSTALL_DIR/bin/kafka-storage.sh format -t "$CLUSTER_ID" -c "$INSTALL_DIR/config/kraft1/server.properties"
-
+ 
 echo "🔁 Copying cluster ID to other brokers..."
 for i in $(seq 2 $BROKER_COUNT); do
     CONF_DIR="$INSTALL_DIR/config/kraft$i"
@@ -88,42 +87,40 @@ for i in $(seq 2 $BROKER_COUNT); do
     sudo rm -f "$LOG_DIR/meta.properties"
     sudo -u kafka $INSTALL_DIR/bin/kafka-storage.sh format -t "$CLUSTER_ID" -c "$CONF_DIR/server.properties"
 done
-
+ 
 echo "🛠️ Creating systemd services..."
 for i in $(seq 1 $BROKER_COUNT); do
     sudo tee /etc/systemd/system/kafka-broker$i.service > /dev/null <<EOF
 [Unit]
 Description=Apache Kafka Broker $i (KRaft mode)
 After=network.target
-
+ 
 [Service]
 Type=simple
 User=kafka
 ExecStart=$INSTALL_DIR/bin/kafka-server-start.sh $INSTALL_DIR/config/kraft$i/server.properties
 Restart=on-failure
 LimitNOFILE=100000
-
+ 
 [Install]
 WantedBy=multi-user.target
 EOF
 done
-
+ 
 echo "🔁 Reloading and enabling services..."
 sudo systemctl daemon-reexec
 sudo systemctl daemon-reload
-
-# Start broker 1 first and ensure it's running
+ 
 sudo systemctl enable kafka-broker1
 sudo systemctl start kafka-broker1
 echo "⏳ Waiting for Broker 1 to start..."
-sleep 10  # Give Broker 1 time to initialize
-
-# Start the rest of the brokers after Broker 1 is running
+sleep 10
+ 
 for i in $(seq 2 $BROKER_COUNT); do
     sudo systemctl enable kafka-broker$i
     sudo systemctl start kafka-broker$i
 done
-
+ 
 echo "✅ Kafka with $BROKER_COUNT brokers is now running on a single node!"
 echo ""
 echo "🧪 Broker Ports:"
