@@ -10,12 +10,14 @@ SCALA_VERSION="2.12"
 KAFKA_DIR="kafka_${SCALA_VERSION}-${KAFKA_VERSION}"
 KAFKA_URL="https://dlcdn.apache.org/kafka/${KAFKA_VERSION}/${KAFKA_DIR}.tgz"
 INSTALL_DIR="/opt/kafka"
-STORAGE_BASE="/home/adqdevops2_gmail_com/storage"
-HOST_IP=$(hostname -I | awk '{print $1}')
+STORAGE_BASE="/home/kafkaadmin/kafka-data"
+USER_PATH="/home/kafkaadmin"
+EXTERNAL_IP="13.82.216.160"  # Update with your external IP
+LISTENER_IP="10.1.2.3"       # IP address for listeners (internal)
 BROKER_COUNT=${BROKER_COUNT:-3}  # Default to 3 brokers if not set
 
 echo "🔧 Installing Java & dependencies..."
-sudo apt update && sudo apt install -y openjdk-11-jdk wget
+sudo dnf install -y java-11-openjdk wget tar || sudo yum install -y java-11-openjdk wget tar
 
 echo "👤 Creating 'kafka' user..."
 sudo useradd -m -s /bin/bash kafka || echo "User 'kafka' already exists"
@@ -34,7 +36,7 @@ for i in $(seq 1 $BROKER_COUNT); do
     sudo mkdir -p "$DIR"
     sudo chown -R kafka:kafka "$DIR"
 done
-sudo chmod o+x /home/adqdevops2_gmail_com
+sudo chmod o+x $USER_PATH
 
 echo "📜 Creating configs for each broker..."
 for i in $(seq 1 $BROKER_COUNT); do
@@ -49,9 +51,9 @@ for i in $(seq 1 $BROKER_COUNT); do
     for j in $(seq 1 $BROKER_COUNT); do
         PEER_CTRL_PORT=$((9091 + j*2))
         if [ -n "$VOTERS" ]; then
-            VOTERS="${VOTERS},${j}@${HOST_IP}:${PEER_CTRL_PORT}"
+            VOTERS="${VOTERS},${j}@${EXTERNAL_IP}:${PEER_CTRL_PORT}"
         else
-            VOTERS="${j}@${HOST_IP}:${PEER_CTRL_PORT}"
+            VOTERS="${j}@${EXTERNAL_IP}:${PEER_CTRL_PORT}"
         fi
     done
 
@@ -59,8 +61,8 @@ for i in $(seq 1 $BROKER_COUNT); do
 process.roles=broker,controller
 node.id=$i
 controller.quorum.voters=$VOTERS
-listeners=PLAINTEXT://0.0.0.0:${PORT},CONTROLLER://0.0.0.0:${CTRL_PORT}
-advertised.listeners=PLAINTEXT://${HOST_IP}:${PORT}
+listeners=PLAINTEXT://${LISTENER_IP}:${PORT},CONTROLLER://${LISTENER_IP}:${CTRL_PORT}
+advertised.listeners=PLAINTEXT://${EXTERNAL_IP}:${PORT}
 controller.listener.names=CONTROLLER
 log.dirs=${LOG_DIR}
 num.network.threads=3
@@ -127,14 +129,13 @@ echo ""
 echo "🧪 Broker Ports:"
 for i in $(seq 1 $BROKER_COUNT); do
     PORT=$((9090 + i*2))
-    echo "  Broker $i: PLAINTEXT://${HOST_IP}:${PORT}"
+    echo "  Broker $i: PLAINTEXT://${EXTERNAL_IP}:${PORT}"
 done
 echo ""
 echo "🔍 To check broker status:"
 for i in $(seq 1 $BROKER_COUNT); do
     echo "  sudo systemctl status kafka-broker$i"
 done
-
 -------------------
 sudo chmod +x multi-broker-kafka.sh
 -------------------
@@ -158,3 +159,4 @@ Broker 3 — nodeId=3 on port 9096,
 sudo rm -rf storage
 sudo rm -rf /opt/kafka
 ========================================================================================================================================
+
