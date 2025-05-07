@@ -1,0 +1,63 @@
+Uninstall Jenkins:
+sudo systemctl disable jenkins
+sudo apt remove jenkins
+sudo apt purge jenkins
+sudo rm -rf /var/lib/jenkins /etc/default/jenkins /var/log/Jenkins
+
+Jenkins older version installation script:
+#!/bin/bash
+
+# Update system
+sudo apt update
+
+# Install Java 17 (Jenkins 2.492.3 is compatible with Java 17)
+sudo apt install -y fontconfig openjdk-17-jre
+java -version
+
+# Create a directory for the Jenkins package
+mkdir -p ~/jenkins-install && cd ~/jenkins-install
+
+# Download specific Jenkins version (2.492.3) from the official mirrors
+wget https://get.jenkins.io/debian-stable/jenkins_2.492.3_all.deb
+
+# Install Jenkins
+sudo dpkg -i jenkins_2.492.3_all.deb
+
+# If there are any missing dependencies, fix them
+sudo apt --fix-broken install -y
+
+# Enable and start Jenkins service
+sudo systemctl enable jenkins
+sudo systemctl start jenkins
+
+# Check Jenkins status
+sudo systemctl status jenkins
+ 
+
+Jenkins configuration backup commands:
+In Parent Jenkins Server (Backup & Upload to Azure Storage)
+# Stop Jenkins service
+systemctl stop jenkins  
+
+# Create a compressed backup of Jenkins data  
+tar -zcvf jenkins.restore.tar.gz /var/lib/jenkins/  
+
+# Upload the backup to an Azure Storage container  
+az storage blob upload --account-name <STORAGE_ACCOUNT_NAME> --container-name <CONTAINER_NAME> --name jenkins.restore.tar.gz --file jenkins.restore.tar.gz  
+[az storage blob upload --account-name ${env.BLOB_STORAGE_ACCOUNT} --container-name jenkinsserver-config-backup --name jenkins.restore.tar.gz --file jenkins.restore.tar.gz --account-key ${env.BLOB_STORAGE_ACCOUNT_KEY}]
+
+In Restored Jenkins Server (Download & Restore Jenkins Data)
+# Stop Jenkins service  
+systemctl stop jenkins  
+
+# Download the backup file from Azure Storage  
+az storage blob download --account-name <STORAGE_ACCOUNT_NAME> --container-name <CONTAINER_NAME> --name jenkins.restore.tar.gz --file jenkins.restore.tar.gz  
+
+# Remove existing Jenkins data  
+rm -rf /var/lib/jenkins  
+
+# Extract the backup  
+tar -zxvf jenkins.restore.tar.gz -C /  
+
+# Start Jenkins service  
+systemctl start jenkins
