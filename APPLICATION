@@ -1,0 +1,623 @@
+i need an application that works as follows:
+1. all data is stored in azure sql database
+2. the application is about different fishes(fish1, fish2, fish3.....so on) and sql db has details of those products.
+3. when user access the application it should display the products available and when he tries to access any products it should display details and cost of that product and also want a section on top to register that user and this data must be stored in sql db.
+4. if user already exists then it should prompt that user exists and you continue with your shopping.
+
+
+🗂 Folder Structure
+fish-store/
+├── backend/
+│   ├── index.js
+│   ├── db.js
+│   ├── routes/
+│   │   ├── fish.js
+│   │   └── user.js
+│   └── package.json
+├── frontend/
+│   ├── app/
+│   │   └── page.tsx (React frontend)
+│   ├── components/
+│   │   └── ui/
+│   │       ├── button.tsx
+│   │       ├── input.tsx
+│   │       └── card.tsx
+│   └── package.json
+└── sql/
+    └── schema.sql
+
+📁 Backend: Node.js API
+backend/package.json
+
+{
+  "name": "fish-store-backend",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mssql": "^9.0.1",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2"
+  }
+}
+
+
+backend/index.js
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const fishRoutes = require('./routes/fish');
+const userRoutes = require('./routes/user');
+
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+
+// Routes
+app.use('/api/fishes', fishRoutes);
+app.use('/api/register', userRoutes);
+
+// Start server, listen on all interfaces (0.0.0.0) so it's accessible externally
+const PORT = 3001;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+
+
+backend/db.js
+const sql = require('mssql');
+
+const config = {
+  user: 'your_sql_username',
+  password: 'your_sql_password',
+  server: 'your_server.database.windows.net',
+  database: 'FishStoreDB',
+  options: {
+    encrypt: true
+  }
+};
+
+module.exports = {
+  sql,
+  poolPromise: new sql.ConnectionPool(config).connect()
+};
+
+
+backend/routes/fish.js
+const express = require('express');
+const router = express.Router();
+const { poolPromise } = require('../db');
+
+router.get('/', async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query('SELECT * FROM Fish');
+    res.json(result.recordset);
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+module.exports = router;
+
+
+backend/routes/user.js
+const express = require('express');
+const router = express.Router();
+const { poolPromise } = require('../db');
+
+router.post('/', async (req, res) => {
+  const { username } = req.body;
+  try {
+    const pool = await poolPromise;
+    const checkUser = await pool.request()
+      .input('username', username)
+      .query('SELECT * FROM Users WHERE username = @username');
+
+    if (checkUser.recordset.length > 0) {
+      return res.status(400).json({ message: 'User already exists' });
+    }
+
+    await pool.request()
+      .input('username', username)
+      .query('INSERT INTO Users (username) VALUES (@username)');
+
+    res.json({ message: 'User registered successfully' });
+  } catch (err) {
+    res.status(500).send(err.message);
+  }
+});
+
+module.exports = router;
+
+cd /home/azureuser/backend
+sudo chown -R $USER:$USER /home/azureuser/backend
+npm install express cors body-parser mssql
+node index.js
+
+1. Allow Port 3001 in Firewall Rules
+2. Listen on All Interfaces
+Ensure that your Node.js server is listening on all network interfaces (not just localhost). Modify your index.js file as follows:
+app.listen(3001, '0.0.0.0', () => {
+  console.log('Server running on port 3001');
+});
+
+
+
+
+Server name: sqlserver12dev.database.windows.net
+DB name: sqldb-dev
+username: azureuser
+password: Sumanth@97
+
+
+
+
+🗃️ SQL Database (Azure SQL)
+sql/schema.sql
+
+CREATE TABLE Users (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    username VARCHAR(255) UNIQUE NOT NULL
+);
+
+CREATE TABLE Fish (
+    id INT PRIMARY KEY IDENTITY(1,1),
+    name VARCHAR(255),
+    description TEXT,
+    price DECIMAL(10, 2)
+);
+
+-- Sample Data
+INSERT INTO Fish (name, description, price)
+VALUES 
+('Goldfish', 'A beautiful orange fish.', 10.99),
+('Angelfish', 'Elegant and peaceful fish.', 15.49),
+('Betta', 'Vibrant and active.', 8.25);
+
+📁 Folder Structure
+frontend/
+├── tailwind.config.js          ✅
+├── postcss.config.js  
+├── src/
+│   ├── components/
+│   │   ├── Card.tsx
+│   │   ├── Input.tsx
+│   │   └── Button.tsx
+│   ├── App.tsx
+|   ├── index.css 
+│   ├── main.tsx
+├── index.html
+├── package.json
+├── tsconfig.json
+└── vite.config.ts
+
+
+
+package.json
+{
+  "name": "fish-store-frontend",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "^1.6.7",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.1.0",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.0"
+  }
+}
+
+
+src/components/Input.tsx
+import React from 'react';
+
+export const Input = ({ value, onChange, placeholder }: any) => (
+  <input
+    type="text"
+    value={value}
+    onChange={onChange}
+    placeholder={placeholder}
+    className="border p-2 rounded w-full"
+  />
+);
+
+
+src/components/Button.tsx
+import React from 'react';
+
+export const Button = ({ onClick, children }: any) => (
+  <button
+    onClick={onClick}
+    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+  >
+    {children}
+  </button>
+);
+
+
+src/components/Card.tsx
+import React from 'react';
+
+export const Card = ({ children, onClick }: any) => (
+  <div
+    onClick={onClick}
+    className="border shadow rounded p-4 cursor-pointer hover:shadow-md bg-white"
+  >
+    {children}
+  </div>
+);
+
+
+💡 Step 3: Main UI – src/App.tsx
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { Input } from './components/Input';
+import { Button } from './components/Button';
+import { Card } from './components/Card';
+
+type Fish = {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+};
+
+function App() {
+  const [username, setUsername] = useState('');
+  const [message, setMessage] = useState('');
+  const [fishes, setFishes] = useState<Fish[]>([]);
+  const [selectedFish, setSelectedFish] = useState<Fish | null>(null);
+
+  useEffect(() => {
+    axios.get('http://localhost:3001/api/fishes')
+      .then(res => setFishes(res.data))
+      .catch(err => console.error(err));
+  }, []);
+
+  const register = () => {
+    if (!username) return;
+
+    axios.post('http://localhost:3001/api/register', { username })
+      .then(res => setMessage(res.data.message))
+      .catch(err => setMessage(err.response?.data?.message || 'Error'));
+  };
+
+  return (
+    <div className="p-6 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold mb-4">🐟 Fish Store</h1>
+
+      <div className="mb-6">
+        <Input
+          placeholder="Enter your name"
+          value={username}
+          onChange={(e: any) => setUsername(e.target.value)}
+        />
+        <Button onClick={register} className="mt-2">Register</Button>
+        {message && <p className="mt-2 text-red-500">{message}</p>}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {fishes.map(fish => (
+          <Card key={fish.id} onClick={() => setSelectedFish(fish)}>
+            <p className="font-bold">{fish.name}</p>
+          </Card>
+        ))}
+      </div>
+
+      {selectedFish && (
+        <div className="mt-6 p-4 border rounded shadow">
+          <h2 className="text-xl font-bold">{selectedFish.name}</h2>
+          <p>{selectedFish.description}</p>
+          <p className="mt-2 font-semibold">Price: ${selectedFish.price.toFixed(2)}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default App;
+
+🧩 Step 4: Entry Point – src/main.tsx
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './index.css';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+frontend/index.html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fish Store</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+frontend/
+│
+├── index.html         # Main HTML page
+├── styles.css         # CSS for styling
+├── script.js          # JavaScript for functionality (fetch API data)
+└── assets/ 
+
+ Creating the Frontend Files
+index.html:
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fish Shop</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Fish Shop</h1>
+      <div id="user-info">
+        <button id="register-btn">Register</button>
+      </div>
+    </header>
+
+    <section id="fish-list">
+      <h2>Available Fishes</h2>
+      <ul id="fish-items">
+        <!-- Fish list will be populated here by JavaScript -->
+      </ul>
+    </section>
+
+    <section id="fish-details" style="display: none;">
+      <h2>Fish Details</h2>
+      <div id="fish-detail-content">
+        <!-- Fish details will be populated here by JavaScript -->
+      </div>
+    </section>
+
+    <div id="registration-form" style="display: none;">
+      <h2>Register</h2>
+      <form id="register-form">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required>
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+        <button type="submit">Register</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
+
+styles.css:
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+.container {
+  width: 80%;
+  margin: 0 auto;
+}
+
+header {
+  text-align: center;
+  background-color: #4CAF50;
+  padding: 20px;
+  color: white;
+}
+
+h1 {
+  margin: 0;
+}
+
+#fish-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
+#fish-items li {
+  list-style: none;
+  margin: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  width: 30%;
+}
+
+#fish-details, #registration-form {
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+
+script.js:
+
+document.addEventListener('DOMContentLoaded', () => {
+  const fishListContainer = document.getElementById('fish-items');
+  const fishDetailsContainer = document.getElementById('fish-detail-content');
+  const fishDetailsSection = document.getElementById('fish-details');
+  const registrationForm = document.getElementById('registration-form');
+  const registerBtn = document.getElementById('register-btn');
+  const userInfo = document.getElementById('user-info');
+  
+  const apiUrl = 'http://172.178.25.137:3001/api/fishes';
+  
+  // Fetch and display the list of fishes
+  fetch(apiUrl)
+    .then(response => response.json())
+    .then(fishes => {
+      fishes.forEach(fish => {
+        const fishItem = document.createElement('li');
+        fishItem.textContent = fish.name;
+        fishItem.addEventListener('click', () => showFishDetails(fish));
+        fishListContainer.appendChild(fishItem);
+      });
+    });
+
+  // Show fish details when clicked
+  function showFishDetails(fish) {
+    fishDetailsContainer.innerHTML = `
+      <h3>${fish.name}</h3>
+      <p><strong>Description:</strong> ${fish.description}</p>
+      <p><strong>Price:</strong> $${fish.price}</p>
+    `;
+    fishDetailsSection.style.display = 'block';
+  }
+
+  // Show registration form when 'Register' is clicked
+  registerBtn.addEventListener('click', () => {
+    registrationForm.style.display = 'block';
+    userInfo.style.display = 'none';
+  });
+
+  // Handle registration form submission
+  document.getElementById('register-form').addEventListener('submit', (event) => {
+    event.preventDefault();
+    
+    const username = event.target.username.value;
+    const password = event.target.password.value;
+    
+    fetch('http://172.178.25.137:3001/api/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.message === 'User exists') {
+        alert('User already exists. Please log in or continue shopping.');
+      } else {
+        alert('Registration successful!');
+        registrationForm.style.display = 'none';
+        userInfo.style.display = 'block';
+      }
+    });
+  });
+});
+
+🔍 Case 2: Accessing From Another Machine / Cloud
+If frontend is hosted remotely (e.g., on a VM), and you're trying to access localhost:3001, it's actually trying to reach itself, not your backend.
+
+🔧 Fix:
+Change frontend axios calls to use your backend’s actual IP address or DNS name.
+
+Update this in src/App.tsx:
+axios.get('http://<your-backend-IP>:3001/api/fishes')
+
+axios.post('http://<your-backend-IP>:3001/api/register', { username })
+
+
+
+
+🧱 1. Run Tailwind Installation Commands (in your frontend folder)
+
+sudo apt update
+sudo apt install nodejs npm -y
+node -v
+npm -v
+
+cd frontend
+Step 1: Download Tailwind CLI binary
+
+curl -sLO https://github.com/tailwindlabs/tailwindcss/releases/latest/download/tailwindcss-linux-x64
+chmod +x tailwindcss-linux-x64
+sudo mv tailwindcss-linux-x64 /usr/local/bin/tailwindcss
+tailwindcss --help
+
+
+
+This will generate:
+tailwind.config.js
+postcss.config.js
+
+
+sudo vim tailwind.config.js
+// tailwind.config.js
+export default {
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+};
+
+
+sudo vim postcss.config.js
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
+
+
+
+
+
+src/index.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+🏃‍♂️ Run the App
+cd frontend
+npm install
+npm run dev
+
+NOTE: Open port 5173 in NSG
+
+🏁 Steps to Run
+SQL:
+
+Create FishStoreDB in Azure SQL.
+
+Run schema.sql.
+
+Backend:
+
+Set up with your Azure SQL credentials in db.js.
+
+Run npm install and npm start.
+
+Frontend:
+
+Use Next.js or React.
+
+Point API requests to the backend.
+
+Run npm install and npm run dev.
