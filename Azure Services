@@ -4,7 +4,7 @@ Networking & Access
 | Azure Virtual Network (VNet)        | Core networking component for Azure.        					                   
 | Network Security Groups (NSG)       | Firewall rules for VMs and subnets.         					                   
 | Azure Bastion                       | Secure RDP/SSH to VMs without public IPs.   					                   
-| Azure Load Balancer              		| Layer 4 traffic distribution.               					                   
+| Azure Load Balancer                 | Layer 4 traffic distribution.               					                   
 | Azure Application Gateway        		| Layer 7 load balancing + WAF.               					                                    
 | Azure Front Door                 		| Global traffic management with WAF and CDN. 					                   
 | Azure DNS                        		| DNS zone hosting and management.            					                   
