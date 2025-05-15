@@ -1,0 +1,14 @@
+# Download kubectl v1.30.0 binary
+curl -LO "https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl"
+
+# Download the SHA256 checksum file for verification
+curl -LO "https://dl.k8s.io/release/v1.30.0/bin/linux/amd64/kubectl.sha256"
+
+# Verify the binary (should print nothing if correct, or 'OK' if using sha256sum -c)
+	
+
+chmod +x kubectl
+sudo mv kubectl /usr/local/bin/
+
+kubectl version --client
+-----------------
