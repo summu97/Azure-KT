@@ -11,4 +11,5 @@ chmod +x kubectl
 sudo mv kubectl /usr/local/bin/
 
 kubectl version --client
+NOTE: Before installing first know the architecture type using: uname -m (x86-64 - 64-bit(AMD))
 -----------------
