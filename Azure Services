@@ -21,7 +21,7 @@ Compute
 -------------------------------------------------------------------------------------------------------------------
 Storage & DatabasesStorage & Databases
 -------------------------------------------------------------------------------------------------------------------
-| Azure Blob Storage 				           | Scalable object storage (e.g., logs, images, backups). 			           
+| Azure Blob Storage                   | Scalable object storage (e.g., logs, images, backups). 			           
 | Azure Files        				           | File shares via SMB/NFS.                               			           
 | Azure Disk Storage 				           | High-performance persistent storage for VMs.           			           
 | Azure Cosmos DB    				           | Globally distributed NoSQL database.                   			           
