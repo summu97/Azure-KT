@@ -1,0 +1,76 @@
+-------------------------------------------------------------------------------------------------------------------
+Networking & Access
+-------------------------------------------------------------------------------------------------------------------
+| Azure Virtual Network (VNet)     		| Core networking component for Azure.        					                   |
+| Network Security Groups (NSG)    		| Firewall rules for VMs and subnets.         					                   |
+| Azure Bastion                    		| Secure RDP/SSH to VMs without public IPs.   					                   |
+| Azure Load Balancer              		| Layer 4 traffic distribution.               					                   |
+| Azure Application Gateway        		| Layer 7 load balancing + WAF.               					                   |                  
+| Azure Front Door                 		| Global traffic management with WAF and CDN. 					                   |
+| Azure DNS                        		| DNS zone hosting and management.            					                   |
+| Private Link / Service Endpoints 		| Private access to Azure PaaS services.      					                   |
+-------------------------------------------------------------------------------------------------------------------
+Compute
+-------------------------------------------------------------------------------------------------------------------
+| Azure Virtual Machines (VMs)    		| IaaS workloads; great for legacy or custom setups. 				               |
+| Azure App Service               		| PaaS hosting for web apps, APIs, etc.              				               |
+| Azure Functions                 		| Serverless compute for event-driven tasks.         				               |
+| Azure Container Instances (ACI) 		| Run containers without managing servers.           				               |
+| Azure Kubernetes Service (AKS)  		| Managed Kubernetes for container orchestration.    				               |
+| VM Scale Sets (VMSS)            		| Auto-scaling of virtual machine workloads.         				               |
+-------------------------------------------------------------------------------------------------------------------
+Storage & DatabasesStorage & Databases
+-------------------------------------------------------------------------------------------------------------------
+| Azure Blob Storage 				           | Scalable object storage (e.g., logs, images, backups). 			           |
+| Azure Files        				           | File shares via SMB/NFS.                               			           |
+| Azure Disk Storage 				           | High-performance persistent storage for VMs.           			           |
+| Azure Cosmos DB    				           | Globally distributed NoSQL database.                   			           |
+| Azure SQL Database 				           | Managed relational database service.                   			           |
+-------------------------------------------------------------------------------------------------------------------
+Containers and Orchestration
+-------------------------------------------------------------------------------------------------------------------
+| Azure Kubernetes Service (AKS) 		   | Managed K8s clusters for deploying containerized apps. 			           |
+| Azure Container Registry (ACR) 		   | Private Docker registry for storing container images.  			           |
+-------------------------------------------------------------------------------------------------------------------
+CI/CD & DevOps
+-------------------------------------------------------------------------------------------------------------------
+| Azure DevOps               			     | End-to-end DevOps tools: Repos, Pipelines, Boards, Artifacts, Test Plans.|
+| GitHub Actions (for Azure) 			     | Native GitHub CI/CD with Azure integrations.                             |
+| Azure Pipelines            			     | Powerful build and release automation pipelines.                         |
+| Azure Artifacts            			     | Package hosting for npm, Maven, NuGet, etc.                              |
+-------------------------------------------------------------------------------------------------------------------
+Security & Identity
+-------------------------------------------------------------------------------------------------------------------
+| Microsoft Entra ID (Azure AD)    		 | Identity and access management.                 				                  |
+| Azure Key Vault                  		 | Securely store secrets, keys, and certificates. 				                  |
+| Managed Identities               		 | Authentication without credentials.             				                  |
+| Azure Policy                     		 | Governance and compliance enforcement.          				                  |
+| Role-Based Access Control (RBAC) 		 | Fine-grained access permissions.                				                  |
+-------------------------------------------------------------------------------------------------------------------
+Infrastructure as Code (IaC)
+-------------------------------------------------------------------------------------------------------------------
+| ARM Templates                     	 | Native JSON-based IaC templates.            					                    |
+| Bicep                             	 | Simplified language over ARM templates.     					                    |
+-------------------------------------------------------------------------------------------------------------------
+Monitoring & Logging
+-------------------------------------------------------------------------------------------------------------------
+| Azure Monitor              			     | Unified monitoring service for logs, metrics, alerts. 			              |
+| Azure Log Analytics        			     | Log querying and visualization.                       			              |
+| Azure Application Insights 			     | Application performance monitoring (APM).             			              |
+| Network Watcher            			     | Monitor and diagnose network traffic.                 			              |
+-------------------------------------------------------------------------------------------------------------------
+Automation & Integration
+-------------------------------------------------------------------------------------------------------------------
+| Azure Automation  				           | Runbooks, process automation, DSC configuration.                      	  |
+| Azure Logic Apps  				           | Workflow automation connecting systems (low-code).                    	  |
+| Azure Event Grid  				           | Event-based messaging and automation.                                   	|
+| Azure Service Bus 				           | Reliable messaging between applications.                               	|
+| Azure Event Hubs  				           | Real-time data streaming and ingestion.                                	|
+-------------------------------------------------------------------------------------------------------------------
+Optional but Useful
+-------------------------------------------------------------------------------------------------------------------
+| Azure Blueprints      			         | Package policies, ARM templates, and RBAC. 				                    	|
+| Azure Site Recovery   			         | Disaster recovery.                         				                    	|
+| Azure Backup          			         | Managed backup solution.                   			                    		|
+| Azure Cost Management 			         | Budgeting and cost tracking.               			                    		|
+-------------------------------------------------------------------------------------------------------------------
