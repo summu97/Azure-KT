@@ -1,0 +1,20 @@
+---
+HTTP ERROR 500 jakarta.servlet.ServletException: Unexpected Exception
+URI:  /login
+STATUS:  500
+MESSAGE:  jakarta.servlet.ServletException: Unexpected Exception
+SERVLET:  Stapler
+CAUSED BY:  java.util.ServiceConfigurationError: org.kohsuke.stapler.jelly.JellyTagFileLoader: Error accessing configuration file
+CAUSED BY:  java.nio.file.NoSuchFileException: /var/cache/jenkins/war/WEB-INF/lib/stapler-groovy-1928.v9115fe47607f.jar
+Caused by:
+java.util.ServiceConfigurationError: org.kohsuke.stapler.jelly.JellyTagFileLoader: Error accessing configuration file
+---
+MAIN CAUSE: Deleting /var/cache/jenkins folder.
+RESOLUTION: Create jenkins folder in /var/cache and change ownership to jenkins
+mkdir -p /var/cache/jenkins
+sudo chown -R jenkins:jenkins /var/cache/jenkins
+sudo systemctl stop/start jenkins.service
+
+[Jenkins runs as the jenkins user by default (check with ps aux | grep jenkins).
+Any directories it needs to write to (like its cache) must be writable by that user.
+Without proper ownership, even if the directory exists, Jenkins will fail silently or throw cryptic errors — like the one you saw about NoSuchFileException.]
