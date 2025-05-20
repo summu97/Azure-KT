@@ -1,0 +1,74 @@
+Step-by-Step: Secure PDF Hosting with Nginx on Windows
+Step 1: Download and Extract Nginx
+https://nginx.org/en/download.html
+
+Download the Windows zip version (e.g., nginx-1.24.0.zip)
+Extract it to: C:\nginx
+
+
+Step 2: Organize Your Files
+In C:\nginx\html, create the following structure:
+C:\nginx\html\
+├── index.html
+└── pdfs\
+    ├── pdf1.pdf
+    ├── pdf2.pdf
+    ├── pdf3.pdf
+    ├── pdf4.pdf
+    └── pdf5.pdf
+
+
+Step 3: Create index.html
+Put this in C:\nginx\html\index.html:
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My PDF Library</title>
+</head>
+<body>
+    <h1>PDF Files</h1>
+    <ul>
+        <li><a href="pdfs/pdf1.pdf" target="_blank">PDF 1</a></li>
+        <li><a href="pdfs/pdf2.pdf" target="_blank">PDF 2</a></li>
+        <li><a href="pdfs/pdf3.pdf" target="_blank">PDF 3</a></li>
+        <li><a href="pdfs/pdf4.pdf" target="_blank">PDF 4</a></li>
+        <li><a href="pdfs/pdf5.pdf" target="_blank">PDF 5</a></li>
+    </ul>
+</body>
+</html>
+
+
+Clicking any link opens the PDF in a new tab.
+
+Step 4: Start Nginx Server
+Open PowerShell or Command Prompt, then run:
+cd C:\nginx
+start nginx
+
+Visit in browser:
+http://localhost
+
+Step 5: Stop Nginx (when done)
+nginx -s stop
+
+
+Limit Nginx to Localhost Only
+Edit C:\nginx\conf\nginx.conf, inside the server block:
+
+server {
+    listen       127.0.0.1:80;  # Change from default
+    server_name  localhost;
+
+    location / {
+        root   html;
+        index  index.html;
+    }
+}
+
+Now it only listens to 127.0.0.1, so only your machine can access it.
+
+Restart Nginx after changes: nginx -s reload
+
+
+Test Access
+http://localhost
