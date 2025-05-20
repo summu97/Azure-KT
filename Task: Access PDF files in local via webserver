@@ -1,13 +1,11 @@
 Step-by-Step: Secure PDF Hosting with Nginx on Windows
 Step 1: Download and Extract Nginx
-https://nginx.org/en/download.html
+https://nginx.org/download/nginx-1.28.0.zip
 
-Download the Windows zip version (e.g., nginx-1.24.0.zip)
-Extract it to: C:\nginx
+Step 2: Extract it to: C:\
 
-
-Step 2: Organize Your Files
-In C:\nginx\html, create the following structure:
+Step 3: Organize Your Files
+In C:\nginx-1.28.0\html, create the following structure:
 C:\nginx\html\
 ├── index.html
 └── pdfs\
@@ -19,7 +17,7 @@ C:\nginx\html\
 
 
 Step 3: Create index.html
-Put this in C:\nginx\html\index.html:
+Put this in C:\nginx-1.28.0\html\index.html:
 <!DOCTYPE html>
 <html>
 <head>
@@ -42,8 +40,8 @@ Clicking any link opens the PDF in a new tab.
 
 Step 4: Start Nginx Server
 Open PowerShell or Command Prompt, then run:
-cd C:\nginx
-start nginx
+cd C:\nginx-1.28.0
+start nginx.exe
 
 Visit in browser:
 http://localhost
