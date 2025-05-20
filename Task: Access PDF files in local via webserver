@@ -70,3 +70,9 @@ Restart Nginx after changes: nginx -s reload
 
 Test Access
 http://localhost
+
+
+Key Point
+Browsers do not allow a webpage to force opening a file in an external application like Adobe Acrobat directly from a web link. This is by design for security reasons.
+
+BUT you can influence the browser to not use its built-in viewer, which indirectly opens the PDF in your default system PDF viewer (e.g., Adobe Acrobat), especially when served from your local Nginx.
