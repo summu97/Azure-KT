@@ -1,4 +1,9 @@
 ✅ Generate Self-Signed Certificate for userapp.52.168.3.48.nip.io
+
+✅ What is SAN (Subject Alternative Name)?
+SAN stands for Subject Alternative Name — it's a field in an SSL/TLS certificate that allows you to specify multiple domain names (or IP addresses) the certificate should be valid for.
+
+
 1. Create an OpenSSL config file with SAN
 Create a file called:
 sudo vim openssl-san.cnf
