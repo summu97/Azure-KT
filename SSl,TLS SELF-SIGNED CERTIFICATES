@@ -1,0 +1,108 @@
+✅ Generate Self-Signed Certificate for userapp.52.168.3.48.nip.io
+1. Create an OpenSSL config file with SAN
+Create a file called:
+sudo vim openssl-san.cnf
+
+[req]
+default_bits       = 2048
+prompt             = no
+default_md         = sha256
+distinguished_name = dn
+req_extensions     = req_ext
+
+[dn]
+C = IN
+ST = State
+L = City
+O = MyOrg
+OU = MyUnit
+CN = userapp.52.168.3.48.nip.io
+
+[req_ext]
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = userapp.52.168.3.48.nip.io
+
+
+2. Generate the Private Key
+openssl genrsa -out userapp.key 2048
+
+
+3. Generate the Certificate Using the Config
+openssl req -x509 -new -nodes -key userapp.key -sha256 -days 365 \
+-out userapp.crt -config openssl-san.cnf -extensions req_ext
+
+
+📁 Output
+userapp.crt → Certificate
+userapp.key → Private Key
+
+
+use your self-signed certificate with a Kubernetes Ingress
+🔐 Step 1: Create the TLS Secret
+Run this command:
+kubectl create secret tls userapp-tls \
+  --cert=userapp.crt \
+  --key=userapp.key \
+  --namespace=application
+
+Replace default with your actual namespace if different.
+NOTE: You should create the TLS secret in the same namespace where your Ingress resource and application service are running.
+
+🌐 Step 2: Define the Ingress Resource
+Here’s an example Ingress manifest that uses the TLS secret:
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: userapp-ingress
+  namespace: application
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/proxy-body-size: "1024m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "60s"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - userapp.52.168.3.48.nip.io
+    secretName: userapp-tls  # The name of the TLS secret you created
+  rules:
+  - host: userapp.52.168.3.48.nip.io
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: userregistration
+            port:
+              number: 3030
+
+
+🧪 Step 3: Test It
+kubectl apply -f userapp-ingress.yaml
+
+--------------------------------------------
+Issues: https with a strikethrough and "Not Secure"
+
+- The https with a strikethrough and "Not Secure" message means your browser detects HTTPS is used but the certificate is not trusted (self-signed or invalid).
+
+This happens because:
+- Your browser sees HTTPS is enabled.
+- But it doesn't trust the certificate because it’s self-signed or missing from trusted cert authorities.
+
+How to make it show the normal HTTPS padlock (✅ secure) in a test environment?
+- Add your self-signed certificate as a trusted root certificate on your local machine/browser.
+- This tells your system to trust that cert explicitly, so no warning.
+
+Quick steps to trust your self-signed cert locally (example for Windows):
+- Export your "userapp.crt" certificate file (in .crt or .cer format).
+- Open Manage Computer Certificates (certmgr.msc).
+- Navigate to Trusted Root Certification Authorities → Certificates.
+- Right-click and select Import.
+- Import your userapp.crt file.
+- Restart your browser and try accessing the site again.
+
+Now access your application and it will work with "HTTPS".
